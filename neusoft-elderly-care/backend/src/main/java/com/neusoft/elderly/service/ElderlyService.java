@@ -8,6 +8,7 @@ import com.neusoft.elderly.mapper.BedMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 @Service
 public class ElderlyService extends ServiceImpl<ElderlyMapper, Elderly> {
@@ -17,11 +18,19 @@ public class ElderlyService extends ServiceImpl<ElderlyMapper, Elderly> {
 
     @Transactional
     public void checkIn(Elderly elderly, Long bedId) {
+        // 校验床位是否存在
+        Bed bed = bedMapper.selectById(bedId);
+        Assert.notNull(bed, "床位不存在");
+
+        // 校验床位是否已被占用
+        if (bed.getStatus() != null && bed.getStatus() == 1) {
+            throw new IllegalStateException("该床位已被占用");
+        }
+
         elderly.setBedId(bedId);
         elderly.setStatus(1);
         baseMapper.insert(elderly);
 
-        Bed bed = bedMapper.selectById(bedId);
         bed.setStatus(1);
         bed.setElderlyId(elderly.getId());
         bedMapper.updateById(bed);
@@ -30,7 +39,9 @@ public class ElderlyService extends ServiceImpl<ElderlyMapper, Elderly> {
     @Transactional
     public void checkOut(Long elderlyId) {
         Elderly elderly = baseMapper.selectById(elderlyId);
-        if (elderly != null && elderly.getBedId() != null) {
+        Assert.notNull(elderly, "老人信息不存在");
+
+        if (elderly.getBedId() != null) {
             Bed bed = bedMapper.selectById(elderly.getBedId());
             if (bed != null) {
                 bed.setStatus(0);
