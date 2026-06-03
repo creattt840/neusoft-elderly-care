@@ -1,10 +1,14 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.neusoft.elderly.entity.CareLevel;
-import com.neusoft.elderly.mapper.CareLevelMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.CareLevelVO;
 
-@Service
-public class CareLevelService extends ServiceImpl<CareLevelMapper, CareLevel> {
+import java.util.List;
+
+public interface CareLevelService extends IService<CareLevel> {
+
+    List<CareLevelVO> listCareLevelVOs();
+
+    CareLevelVO getCareLevelVO(Long id);
 }

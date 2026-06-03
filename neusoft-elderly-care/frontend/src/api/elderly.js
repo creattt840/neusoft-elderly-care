@@ -2,7 +2,8 @@ import api from './index'
 
 export const authApi = {
   login: (data) => api.post('/auth/login', data),
-  register: (data) => api.post('/auth/register', data)
+  register: (data) => api.post('/auth/register', data),
+  logout: () => api.post('/auth/logout')
 }
 
 export const elderlyApi = {
@@ -13,7 +14,8 @@ export const elderlyApi = {
   delete: (id) => api.delete(`/elderly/${id}`),
   checkIn: (data, bedId) => api.post('/elderly/check-in', data, { params: { bedId } }),
   checkOut: (id) => api.post(`/elderly/check-out/${id}`),
-  statistics: () => api.get('/elderly/statistics')
+  statistics: () => api.get('/elderly/statistics'),
+  availableBeds: (id) => api.get(`/elderly/${id}/available-beds`)
 }
 
 export const roomApi = {
@@ -26,6 +28,7 @@ export const roomApi = {
 
 export const bedApi = {
   list: () => api.get('/bed/list'),
+  page: (params) => api.get('/bed/page', { params }),
   available: () => api.get('/bed/available'),
   getByRoomId: (roomId) => api.get(`/bed/room/${roomId}`),
   save: (data) => api.post('/bed', data),
@@ -50,6 +53,7 @@ export const careApi = {
   updateLevel: (data) => api.put('/care/level', data),
   deleteLevel: (id) => api.delete(`/care/level/${id}`),
   // 护理内容
+  itemPage: (params) => api.get('/care/item/page', { params }),
   itemList: (careLevelId) => api.get('/care/item/list', { params: { careLevelId } }),
   saveItem: (data) => api.post('/care/item', data),
   updateItem: (data) => api.put('/care/item', data),
@@ -72,9 +76,12 @@ export const mealApi = {
   updateCalendar: (data) => api.put('/meal/calendar', data),
   deleteCalendar: (id) => api.delete(`/meal/calendar/${id}`),
   // 膳食计划
+  planPage: (params) => api.get('/meal/plan/page', { params }),
+  assignedElderlyIds: () => api.get('/meal/plan/assigned-elderly-ids'),
   planByElderly: (elderlyId) => api.get(`/meal/plan/${elderlyId}`),
   savePlan: (data) => api.post('/meal/plan', data),
-  updatePlan: (data) => api.put('/meal/plan', data)
+  updatePlan: (data) => api.put('/meal/plan', data),
+  deletePlan: (id) => api.delete(`/meal/plan/${id}`)
 }
 
 export const serviceApi = {
@@ -89,5 +96,8 @@ export const serviceApi = {
 }
 
 export const statisticsApi = {
-  dashboard: () => api.get('/statistics/dashboard')
+  dashboard: () => api.get('/statistics/dashboard'),
+  checkInRecords: (range) => api.get('/statistics/check-in-records', { params: { range } }),
+  checkOutRecords: (range) => api.get('/statistics/check-out-records', { params: { range } }),
+  recentActiveOutings: (limit = 10) => api.get('/statistics/recent-active-outings', { params: { limit } })
 }

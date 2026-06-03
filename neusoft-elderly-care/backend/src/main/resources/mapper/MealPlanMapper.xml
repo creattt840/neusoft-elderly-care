@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.MealPlanMapper">
+
+    <sql id="mealPlanKeywordFilter">
+        <if test="keyword != null and keyword != ''">
+            AND (
+                e.name LIKE CONCAT('%', #{keyword}, '%')
+                OR mp.dietary_restrictions LIKE CONCAT('%', #{keyword}, '%')
+                OR mp.special_requirements LIKE CONCAT('%', #{keyword}, '%')
+                OR mp.preference LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="countMealPlanPage" resultType="long">
+        SELECT COUNT(*)
+        FROM meal_plan mp
+        LEFT JOIN elderly e ON mp.elderly_id = e.id
+        <where>
+            <include refid="mealPlanKeywordFilter"/>
+        </where>
+    </select>
+
+    <select id="selectMealPlanPage" resultType="com.neusoft.elderly.vo.MealPlanVO">
+        SELECT
+            mp.id,
+            mp.elderly_id AS elderlyId,
+            e.name AS elderlyName,
+            mp.dietary_restrictions AS dietaryRestrictions,
+            mp.special_requirements AS specialRequirements,
+            mp.preference,
+            mp.create_time AS createTime,
+            mp.update_time AS updateTime
+        FROM meal_plan mp
+        INNER JOIN (
+            SELECT mp2.id
+            FROM meal_plan mp2
+            LEFT JOIN elderly e2 ON mp2.elderly_id = e2.id
+            <where>
+                <if test="keyword != null and keyword != ''">
+                    AND (
+                        e2.name LIKE CONCAT('%', #{keyword}, '%')
+                        OR mp2.dietary_restrictions LIKE CONCAT('%', #{keyword}, '%')
+                        OR mp2.special_requirements LIKE CONCAT('%', #{keyword}, '%')
+                        OR mp2.preference LIKE CONCAT('%', #{keyword}, '%')
+                    )
+                </if>
+            </where>
+            ORDER BY mp2.elderly_id ASC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON mp.id = page_ids.id
+        LEFT JOIN elderly e ON mp.elderly_id = e.id
+        ORDER BY mp.elderly_id ASC
+    </select>
+
+    <select id="selectMealPlanVOByElderlyId" resultType="com.neusoft.elderly.vo.MealPlanVO">
+        SELECT
+            mp.id,
+            mp.elderly_id AS elderlyId,
+            e.name AS elderlyName,
+            mp.dietary_restrictions AS dietaryRestrictions,
+            mp.special_requirements AS specialRequirements,
+            mp.preference,
+            mp.create_time AS createTime,
+            mp.update_time AS updateTime
+        FROM meal_plan mp
+        LEFT JOIN elderly e ON mp.elderly_id = e.id
+        WHERE mp.elderly_id = #{elderlyId}
+        LIMIT 1
+    </select>
+
+</mapper>

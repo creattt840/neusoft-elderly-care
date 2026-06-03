@@ -1,16 +1,24 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.entity.Outing;
-import com.neusoft.elderly.mapper.OutingMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.OutingVO;
 
 import java.util.List;
 
-@Service
-public class OutingService extends ServiceImpl<OutingMapper, Outing> {
+public interface OutingService extends IService<Outing> {
 
-    public List<Outing> getActiveOutings() {
-        return baseMapper.selectActiveOutings();
-    }
+    List<OutingVO> listOutingVOs();
+
+    List<OutingVO> listActiveOutingVOs();
+
+    PageResult<OutingVO> pageOutingVOs(Page<Outing> page);
+
+    OutingVO getOutingVO(Long id);
+
+    List<Outing> getActiveOutings();
+
+    void returnOuting(Long id);
 }

@@ -1,9 +1,11 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.common.Result;
 import com.neusoft.elderly.entity.Outing;
 import com.neusoft.elderly.service.OutingService;
+import com.neusoft.elderly.vo.OutingVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,25 +19,25 @@ public class OutingController {
     private OutingService outingService;
 
     @GetMapping("/list")
-    public Result<List<Outing>> list() {
-        return Result.success(outingService.list());
+    public Result<List<OutingVO>> list() {
+        return Result.success(outingService.listOutingVOs());
     }
 
     @GetMapping("/active")
-    public Result<List<Outing>> active() {
-        return Result.success(outingService.getActiveOutings());
+    public Result<List<OutingVO>> active() {
+        return Result.success(outingService.listActiveOutingVOs());
     }
 
     @GetMapping("/page")
-    public Result<Page<Outing>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                     @RequestParam(defaultValue = "10") Integer pageSize) {
+    public Result<PageResult<OutingVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
+                                            @RequestParam(defaultValue = "10") Integer pageSize) {
         Page<Outing> page = new Page<>(pageNum, pageSize);
-        return Result.success(outingService.page(page));
+        return Result.success(outingService.pageOutingVOs(page));
     }
 
     @GetMapping("/{id}")
-    public Result<Outing> getById(@PathVariable Long id) {
-        return Result.success(outingService.getById(id));
+    public Result<OutingVO> getById(@PathVariable Long id) {
+        return Result.success(outingService.getOutingVO(id));
     }
 
     @PostMapping
@@ -50,10 +52,8 @@ public class OutingController {
 
     @PostMapping("/return/{id}")
     public Result<Boolean> returnOuting(@PathVariable Long id) {
-        Outing outing = outingService.getById(id);
-        outing.setStatus(1);
-        outing.setActualReturnTime(java.time.LocalDateTime.now());
-        return Result.success(outingService.updateById(outing));
+        outingService.returnOuting(id);
+        return Result.success(true);
     }
 
     @DeleteMapping("/{id}")

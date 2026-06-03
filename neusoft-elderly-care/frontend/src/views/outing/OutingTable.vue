@@ -1,6 +1,7 @@
 <template>
   <el-table :data="data" border>
-    <el-table-column prop="elderlyId" label="老人ID" width="80" />
+    <el-table-column prop="elderlyName" label="老人姓名" width="100" />
+    <el-table-column prop="elderlyPhone" label="老人电话" width="120" />
     <el-table-column prop="outingType" label="类型" width="100">
       <template #default="{ row }">
         {{ row.outingType === 1 ? '临时外出' : row.outingType === 2 ? '长期外出' : '外出就医' }}
@@ -9,7 +10,9 @@
     <el-table-column prop="startTime" label="开始时间" width="160" />
     <el-table-column prop="expectedReturnTime" label="预计返回" width="160" />
     <el-table-column prop="accompanier" label="陪同人" width="100" />
-    <el-table-column prop="destination" label="目的地" />
+    <el-table-column prop="accompanierPhone" label="陪同人电话" width="120" />
+    <el-table-column prop="destination" label="目的地" width="120" show-overflow-tooltip />
+    <el-table-column prop="reason" label="外出原因" min-width="150" show-overflow-tooltip />
     <el-table-column prop="status" label="状态" width="100">
       <template #default="{ row }">
         <el-tag :type="row.status === 0 ? 'warning' : 'success'">
@@ -17,17 +20,19 @@
         </el-tag>
       </template>
     </el-table-column>
-    <el-table-column label="操作" width="150" fixed="right">
+    <el-table-column label="操作" width="180" fixed="right">
       <template #default="{ row }">
-        <el-button
-          v-if="row.status === 0"
-          type="success"
-          size="small"
-          @click="handleReturn(row)"
-        >
-          确认返回
-        </el-button>
-        <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+        <div class="action-buttons">
+          <el-button
+            v-if="row.status === 0"
+            type="success"
+            size="small"
+            @click="handleReturn(row)"
+          >
+            确认返回
+          </el-button>
+          <el-button type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+        </div>
       </template>
     </el-table-column>
   </el-table>
@@ -59,3 +64,12 @@ const handleDelete = (row) => {
   })
 }
 </script>
+
+<style scoped>
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+</style>

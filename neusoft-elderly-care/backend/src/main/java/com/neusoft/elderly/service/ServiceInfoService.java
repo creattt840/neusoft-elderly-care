@@ -1,16 +1,16 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.neusoft.elderly.entity.ServiceInfo;
-import com.neusoft.elderly.mapper.ServiceMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.ServiceInfoVO;
 
 import java.util.List;
 
-@Service
-public class ServiceInfoService extends ServiceImpl<ServiceMapper, ServiceInfo> {
+public interface ServiceInfoService extends IService<ServiceInfo> {
 
-    public List<ServiceInfo> getActiveServices() {
-        return baseMapper.selectActiveServices();
-    }
+    List<ServiceInfo> getActiveServices();
+
+    List<ServiceInfo> getActiveByType(Integer type);
+
+    List<ServiceInfoVO> listServiceInfoVOs(Integer type);
 }

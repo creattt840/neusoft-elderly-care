@@ -13,6 +13,9 @@
         <el-tab-pane label="外出中" name="active">
           <outing-table :data="activeData" @refresh="loadData" />
         </el-tab-pane>
+        <el-tab-pane label="已返回" name="returned">
+          <outing-table :data="returnedData" @refresh="loadData" />
+        </el-tab-pane>
       </el-tabs>
     </el-card>
 
@@ -104,6 +107,10 @@ const activeData = computed(() => {
   return tableData.value.filter(item => item.status === 0)
 })
 
+const returnedData = computed(() => {
+  return tableData.value.filter(item => item.status === 1)
+})
+
 const loadData = async () => {
   loading.value = true
   const res = await outingApi.list()
@@ -116,7 +123,7 @@ const loadData = async () => {
 const loadElderly = async () => {
   const res = await elderlyApi.list({ pageNum: 1, pageSize: 1000, status: 1 })
   if (res.code === 200) {
-    elderlyList.value = res.data.records
+    elderlyList.value = res.data.list
   }
 }
 
@@ -142,11 +149,3 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-</style>

@@ -8,7 +8,13 @@
     <el-card>
       <el-form :inline="true">
         <el-form-item label="护理级别">
-          <el-select v-model="selectedLevelId" placeholder="请选择" clearable @change="loadData">
+          <el-select
+            v-model="selectedLevelId"
+            placeholder="全部级别"
+            clearable
+            style="width: 200px"
+            @change="handleFilterChange"
+          >
             <el-option
               v-for="item in levelList"
               :key="item.id"
@@ -20,15 +26,10 @@
       </el-form>
 
       <el-table :data="tableData" v-loading="loading" border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="itemName" label="项目名称" />
-        <el-table-column prop="careLevelId" label="所属级别">
-          <template #default="{ row }">
-            {{ getLevelName(row.careLevelId) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="frequency" label="执行频率" />
-        <el-table-column prop="description" label="描述" />
+        <el-table-column prop="itemName" label="项目名称" min-width="120" />
+        <el-table-column prop="levelName" label="所属级别" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="frequency" label="执行频率" width="120" />
+        <el-table-column prop="description" label="描述" min-width="160" show-overflow-tooltip />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
@@ -36,6 +37,16 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-pagination
+        v-model:current-page="pageNum"
+        :page-size="10"
+        :total="total"
+        layout="total, prev, pager, next, jumper"
+        background
+        class="pagination"
+        @current-change="loadData"
+      />
     </el-card>
 
     <el-dialog :title="dialogTitle" v-model="dialogVisible" width="500px">
@@ -44,7 +55,7 @@
           <el-input v-model="form.itemName" />
         </el-form-item>
         <el-form-item label="所属级别">
-          <el-select v-model="form.careLevelId" placeholder="请选择">
+          <el-select v-model="form.careLevelId" placeholder="请选择" style="width: 100%">
             <el-option
               v-for="item in levelList"
               :key="item.id"
@@ -79,7 +90,9 @@ import { careApi } from '../../api/elderly'
 const loading = ref(false)
 const tableData = ref([])
 const levelList = ref([])
-const selectedLevelId = ref(null)
+const selectedLevelId = ref(undefined)
+const pageNum = ref(1)
+const total = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const isAdd = ref(false)
@@ -94,13 +107,28 @@ const form = reactive({
   sortOrder: 0
 })
 
+const buildQueryParams = () => {
+  const params = {
+    pageNum: pageNum.value,
+    pageSize: 10
+  }
+  if (selectedLevelId.value !== undefined && selectedLevelId.value !== null) {
+    params.careLevelId = selectedLevelId.value
+  }
+  return params
+}
+
 const loadData = async () => {
   loading.value = true
-  const res = await careApi.itemList(selectedLevelId.value)
-  if (res.code === 200) {
-    tableData.value = res.data
+  try {
+    const res = await careApi.itemPage(buildQueryParams())
+    if (res.code === 200) {
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 const loadLevel = async () => {
@@ -110,9 +138,9 @@ const loadLevel = async () => {
   }
 }
 
-const getLevelName = (id) => {
-  const level = levelList.value.find(item => item.id === id)
-  return level ? level.levelName : '-'
+const handleFilterChange = () => {
+  pageNum.value = 1
+  loadData()
 }
 
 const handleAdd = () => {
@@ -149,16 +177,14 @@ const handleDelete = (row) => {
 }
 
 onMounted(() => {
-  loadData()
   loadLevel()
+  loadData()
 })
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
 }
 </style>

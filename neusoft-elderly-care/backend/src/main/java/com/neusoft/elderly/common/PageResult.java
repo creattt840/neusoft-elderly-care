@@ -1,5 +1,8 @@
 package com.neusoft.elderly.common;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
+import java.util.Collections;
 import java.util.List;
 
 public class PageResult<T> {
@@ -55,7 +58,16 @@ public class PageResult<T> {
         result.setList(list);
         result.setPageNum(pageNum);
         result.setPageSize(pageSize);
-        result.setPages((total + pageSize - 1) / pageSize);
+        long pages = pageSize == 0 ? 0 : (total + pageSize - 1) / pageSize;
+        result.setPages(pages);
         return result;
+    }
+
+    public static <T> PageResult<T> of(Page<?> page, List<T> list) {
+        return of(page.getTotal(), list, page.getCurrent(), page.getSize());
+    }
+
+    public static <T> PageResult<T> empty(long pageNum, long pageSize) {
+        return of(0L, Collections.emptyList(), pageNum, pageSize);
     }
 }

@@ -1,0 +1,24 @@
+# Build
+neusoft-elderly-care/backend/target/
+neusoft-elderly-care/frontend/dist/
+neusoft-elderly-care/frontend/node_modules/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs — only root README.md is tracked
+*.md
+!README.md
+doc/
+
+# Secrets
+.env
+.env.*
+*.local

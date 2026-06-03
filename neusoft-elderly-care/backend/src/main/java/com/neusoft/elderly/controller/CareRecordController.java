@@ -1,9 +1,11 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.common.Result;
 import com.neusoft.elderly.entity.CareRecord;
 import com.neusoft.elderly.service.CareRecordService;
+import com.neusoft.elderly.vo.CareRecordVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -19,33 +21,32 @@ public class CareRecordController {
     private CareRecordService careRecordService;
 
     @GetMapping("/list")
-    public Result<List<CareRecord>> list(@RequestParam(required = false) Long elderlyId) {
-        if (elderlyId != null) {
-            return Result.success(careRecordService.getByElderlyId(elderlyId));
-        }
-        return Result.success(careRecordService.list());
+    public Result<List<CareRecordVO>> list(@RequestParam(required = false) Long elderlyId) {
+        return Result.success(careRecordService.listByElderlyId(elderlyId));
     }
 
     @GetMapping("/date")
-    public Result<List<CareRecord>> getByDate(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
-        return Result.success(careRecordService.getByDate(date));
+    public Result<List<CareRecordVO>> getByDate(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
+        return Result.success(careRecordService.listByDate(date));
     }
 
     @GetMapping("/page")
-    public Result<Page<CareRecord>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                         @RequestParam(defaultValue = "10") Integer pageSize) {
+    public Result<PageResult<CareRecordVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
+                                                 @RequestParam(defaultValue = "10") Integer pageSize,
+                                                 @RequestParam(required = false) Long elderlyId,
+                                                 @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate recordDate) {
         Page<CareRecord> page = new Page<>(pageNum, pageSize);
-        return Result.success(careRecordService.page(page));
+        return Result.success(careRecordService.pageCareRecordVOs(page, elderlyId, recordDate));
     }
 
     @PostMapping
     public Result<Boolean> save(@RequestBody CareRecord careRecord) {
-        return Result.success(careRecordService.save(careRecord));
+        return Result.success(careRecordService.saveCareRecord(careRecord));
     }
 
     @PutMapping
     public Result<Boolean> update(@RequestBody CareRecord careRecord) {
-        return Result.success(careRecordService.updateById(careRecord));
+        return Result.success(careRecordService.updateCareRecord(careRecord));
     }
 
     @DeleteMapping("/{id}")

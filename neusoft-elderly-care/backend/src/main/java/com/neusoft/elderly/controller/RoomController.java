@@ -1,9 +1,11 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.common.Result;
 import com.neusoft.elderly.entity.Room;
 import com.neusoft.elderly.service.RoomService;
+import com.neusoft.elderly.vo.RoomVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,20 +19,20 @@ public class RoomController {
     private RoomService roomService;
 
     @GetMapping("/list")
-    public Result<List<Room>> list() {
-        return Result.success(roomService.list());
+    public Result<List<RoomVO>> list() {
+        return Result.success(roomService.listRoomVOs());
     }
 
     @GetMapping("/page")
-    public Result<Page<Room>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                   @RequestParam(defaultValue = "10") Integer pageSize) {
+    public Result<PageResult<RoomVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
+                                           @RequestParam(defaultValue = "10") Integer pageSize) {
         Page<Room> page = new Page<>(pageNum, pageSize);
-        return Result.success(roomService.page(page));
+        return Result.success(roomService.pageRoomVOs(page));
     }
 
     @GetMapping("/{id}")
-    public Result<Room> getById(@PathVariable Long id) {
-        return Result.success(roomService.getById(id));
+    public Result<RoomVO> getById(@PathVariable Long id) {
+        return Result.success(roomService.getRoomVO(id));
     }
 
     @PostMapping

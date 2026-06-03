@@ -1,11 +1,14 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.common.Result;
-import com.neusoft.elderly.entity.CareLevel;
 import com.neusoft.elderly.entity.CareItem;
-import com.neusoft.elderly.service.CareLevelService;
+import com.neusoft.elderly.entity.CareLevel;
 import com.neusoft.elderly.service.CareItemService;
+import com.neusoft.elderly.service.CareLevelService;
+import com.neusoft.elderly.vo.CareItemVO;
+import com.neusoft.elderly.vo.CareLevelVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +24,9 @@ public class CareController {
     @Autowired
     private CareItemService careItemService;
 
-    // 护理级别
     @GetMapping("/level/list")
-    public Result<List<CareLevel>> levelList() {
-        return Result.success(careLevelService.list());
+    public Result<List<CareLevelVO>> levelList() {
+        return Result.success(careLevelService.listCareLevelVOs());
     }
 
     @PostMapping("/level")
@@ -42,13 +44,17 @@ public class CareController {
         return Result.success(careLevelService.removeById(id));
     }
 
-    // 护理内容
+    @GetMapping("/item/page")
+    public Result<PageResult<CareItemVO>> itemPage(@RequestParam(defaultValue = "1") Integer pageNum,
+                                                   @RequestParam(defaultValue = "10") Integer pageSize,
+                                                   @RequestParam(required = false) Long careLevelId) {
+        Page<CareItem> page = new Page<>(pageNum, pageSize);
+        return Result.success(careItemService.pageCareItemVOs(page, careLevelId));
+    }
+
     @GetMapping("/item/list")
-    public Result<List<CareItem>> itemList(@RequestParam(required = false) Long careLevelId) {
-        if (careLevelId != null) {
-            return Result.success(careItemService.getByCareLevelId(careLevelId));
-        }
-        return Result.success(careItemService.list());
+    public Result<List<CareItemVO>> itemList(@RequestParam(required = false) Long careLevelId) {
+        return Result.success(careItemService.listByCareLevelId(careLevelId));
     }
 
     @PostMapping("/item")

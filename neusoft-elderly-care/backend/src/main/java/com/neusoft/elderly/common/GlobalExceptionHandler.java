@@ -21,6 +21,11 @@ public class GlobalExceptionHandler {
         return Result.error(400, message);
     }
 
+    @ExceptionHandler(BusinessException.class)
+    public Result<String> handleBusinessException(BusinessException e) {
+        return Result.error(e.getCode(), e.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public Result<String> handleIllegalArgument(IllegalArgumentException e) {
         return Result.error(400, e.getMessage());

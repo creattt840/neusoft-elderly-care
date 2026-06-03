@@ -1,11 +1,12 @@
 package com.neusoft.elderly.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.neusoft.elderly.common.Result;
 import com.neusoft.elderly.entity.ServiceInfo;
 import com.neusoft.elderly.entity.ServiceSubscription;
 import com.neusoft.elderly.service.ServiceInfoService;
 import com.neusoft.elderly.service.ServiceSubscriptionService;
+import com.neusoft.elderly.vo.ServiceInfoVO;
+import com.neusoft.elderly.vo.ServiceSubscriptionVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,16 +22,9 @@ public class ServiceController {
     @Autowired
     private ServiceSubscriptionService serviceSubscriptionService;
 
-    // 服务项目
     @GetMapping("/list")
-    public Result<List<ServiceInfo>> list(@RequestParam(required = false) Integer type) {
-        if (type != null) {
-            return Result.success(serviceInfoService.lambdaQuery()
-                    .eq(ServiceInfo::getServiceType, type)
-                    .eq(ServiceInfo::getStatus, 1)
-                    .list());
-        }
-        return Result.success(serviceInfoService.list());
+    public Result<List<ServiceInfoVO>> list(@RequestParam(required = false) Integer type) {
+        return Result.success(serviceInfoService.listServiceInfoVOs(type));
     }
 
     @PostMapping
@@ -48,10 +42,9 @@ public class ServiceController {
         return Result.success(serviceInfoService.removeById(id));
     }
 
-    // 服务订阅
     @GetMapping("/subscription/{elderlyId}")
-    public Result<List<ServiceSubscription>> getByElderlyId(@PathVariable Long elderlyId) {
-        return Result.success(serviceSubscriptionService.getByElderlyId(elderlyId));
+    public Result<List<ServiceSubscriptionVO>> getByElderlyId(@PathVariable Long elderlyId) {
+        return Result.success(serviceSubscriptionService.listSubscriptionVOs(elderlyId));
     }
 
     @PostMapping("/subscription")

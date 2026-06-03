@@ -1,16 +1,12 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.neusoft.elderly.entity.ServiceSubscription;
-import com.neusoft.elderly.mapper.ServiceSubscriptionMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.ServiceSubscriptionVO;
 
 import java.util.List;
 
-@Service
-public class ServiceSubscriptionService extends ServiceImpl<ServiceSubscriptionMapper, ServiceSubscription> {
+public interface ServiceSubscriptionService extends IService<ServiceSubscription> {
 
-    public List<ServiceSubscription> getByElderlyId(Long elderlyId) {
-        return baseMapper.selectByElderlyId(elderlyId);
-    }
+    List<ServiceSubscriptionVO> listSubscriptionVOs(Long elderlyId);
 }

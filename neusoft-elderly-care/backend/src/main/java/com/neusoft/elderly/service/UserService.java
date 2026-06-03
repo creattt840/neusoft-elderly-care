@@ -1,14 +1,20 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.dto.UserLoginDTO;
+import com.neusoft.elderly.dto.UserRegisterDTO;
 import com.neusoft.elderly.entity.User;
-import com.neusoft.elderly.mapper.UserMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.UserVO;
 
-@Service
-public class UserService extends ServiceImpl<UserMapper, User> {
+import java.util.Map;
 
-    public User findByPhone(String phone) {
-        return baseMapper.selectByPhone(phone);
-    }
+public interface UserService extends IService<User> {
+
+    User findByPhone(String phone);
+
+    UserVO register(UserRegisterDTO registerDTO);
+
+    Map<String, Object> loginWithToken(UserLoginDTO loginDTO);
+
+    void logout(String token);
 }

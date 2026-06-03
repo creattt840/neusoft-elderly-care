@@ -3,6 +3,7 @@ package com.neusoft.elderly.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -13,7 +14,9 @@ public class CareRecord {
     private Long id;
     private Long elderlyId;
     private Long careItemId;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate recordDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime recordTime;
     private Integer status;
     private String remark;

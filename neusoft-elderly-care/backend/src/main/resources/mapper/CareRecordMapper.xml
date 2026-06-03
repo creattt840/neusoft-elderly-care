@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.CareRecordMapper">
+
+    <sql id="careRecordFilter">
+        <where>
+            <if test="elderlyId != null">
+                cr.elderly_id = #{elderlyId}
+            </if>
+            <if test="recordDate != null">
+                AND cr.record_date = #{recordDate}
+            </if>
+        </where>
+    </sql>
+
+    <select id="countCareRecordPage" resultType="long">
+        SELECT COUNT(*)
+        FROM care_record cr
+        <include refid="careRecordFilter"/>
+    </select>
+
+    <select id="selectCareRecordPage" resultType="com.neusoft.elderly.vo.CareRecordVO">
+        SELECT
+            cr.id,
+            cr.elderly_id AS elderlyId,
+            e.name AS elderlyName,
+            cr.care_item_id AS careItemId,
+            ci.item_name AS itemName,
+            cl.level_name AS levelName,
+            DATE_FORMAT(cr.record_date, '%Y-%m-%d') AS recordDate,
+            DATE_FORMAT(cr.record_time, '%Y-%m-%d %H:%i:%s') AS recordTime,
+            cr.status,
+            cr.remark,
+            cr.create_time AS createTime
+        FROM care_record cr
+        INNER JOIN (
+            SELECT cr2.id
+            FROM care_record cr2
+            <where>
+                <if test="elderlyId != null">
+                    cr2.elderly_id = #{elderlyId}
+                </if>
+                <if test="recordDate != null">
+                    AND cr2.record_date = #{recordDate}
+                </if>
+            </where>
+            ORDER BY cr2.record_time DESC, cr2.id DESC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON cr.id = page_ids.id
+        LEFT JOIN elderly e ON cr.elderly_id = e.id
+        LEFT JOIN care_item ci ON cr.care_item_id = ci.id
+        LEFT JOIN care_level cl ON ci.care_level_id = cl.id
+        ORDER BY cr.record_time DESC, cr.id DESC
+    </select>
+
+    <select id="selectCareRecordList" resultType="com.neusoft.elderly.vo.CareRecordVO">
+        SELECT
+            cr.id,
+            cr.elderly_id AS elderlyId,
+            e.name AS elderlyName,
+            cr.care_item_id AS careItemId,
+            ci.item_name AS itemName,
+            cl.level_name AS levelName,
+            DATE_FORMAT(cr.record_date, '%Y-%m-%d') AS recordDate,
+            DATE_FORMAT(cr.record_time, '%Y-%m-%d %H:%i:%s') AS recordTime,
+            cr.status,
+            cr.remark,
+            cr.create_time AS createTime
+        FROM care_record cr
+        LEFT JOIN elderly e ON cr.elderly_id = e.id
+        LEFT JOIN care_item ci ON cr.care_item_id = ci.id
+        LEFT JOIN care_level cl ON ci.care_level_id = cl.id
+        <where>
+            <if test="elderlyId != null">
+                cr.elderly_id = #{elderlyId}
+            </if>
+            <if test="recordDate != null">
+                AND cr.record_date = #{recordDate}
+            </if>
+        </where>
+        ORDER BY cr.record_time DESC, cr.id DESC
+    </select>
+
+</mapper>

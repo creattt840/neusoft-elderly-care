@@ -55,7 +55,11 @@ CREATE TABLE `elderly` (
     `gender` TINYINT DEFAULT 1 COMMENT '性别：1男 2女',
     `age` INT COMMENT '年龄',
     `id_card` VARCHAR(18) UNIQUE COMMENT '身份证号',
-    `address` VARCHAR(200) COMMENT '家庭住址',
+    `address` VARCHAR(200) COMMENT '家庭住址（完整）',
+    `country` VARCHAR(50) COMMENT '国家',
+    `province` VARCHAR(50) COMMENT '省份',
+    `city` VARCHAR(50) COMMENT '城市',
+    `address_detail` VARCHAR(200) COMMENT '详细地址',
     `health_condition` TEXT COMMENT '健康状况',
     `allergy_info` VARCHAR(500) COMMENT '过敏信息',
     `emergency_contact` VARCHAR(50) COMMENT '紧急联系人',
@@ -277,3 +281,9 @@ SELECT
     SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as available_beds,
     SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as occupied_beds
 FROM bed;
+
+-- 增量迁移（已有库执行）
+-- ALTER TABLE `elderly` ADD COLUMN `country` VARCHAR(50) COMMENT '国家' AFTER `address`;
+-- ALTER TABLE `elderly` ADD COLUMN `province` VARCHAR(50) COMMENT '省份' AFTER `country`;
+-- ALTER TABLE `elderly` ADD COLUMN `city` VARCHAR(50) COMMENT '城市' AFTER `province`;
+-- ALTER TABLE `elderly` ADD COLUMN `address_detail` VARCHAR(200) COMMENT '详细地址' AFTER `city`;

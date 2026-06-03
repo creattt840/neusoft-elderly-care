@@ -1,21 +1,23 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.entity.CareRecord;
-import com.neusoft.elderly.mapper.CareRecordMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.CareRecordVO;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Service
-public class CareRecordService extends ServiceImpl<CareRecordMapper, CareRecord> {
+public interface CareRecordService extends IService<CareRecord> {
 
-    public List<CareRecord> getByElderlyId(Long elderlyId) {
-        return baseMapper.selectByElderlyId(elderlyId);
-    }
+    List<CareRecordVO> listByElderlyId(Long elderlyId);
 
-    public List<CareRecord> getByDate(LocalDate date) {
-        return baseMapper.selectByDate(date);
-    }
+    List<CareRecordVO> listByDate(LocalDate date);
+
+    PageResult<CareRecordVO> pageCareRecordVOs(Page<CareRecord> page, Long elderlyId, LocalDate recordDate);
+
+    boolean saveCareRecord(CareRecord careRecord);
+
+    boolean updateCareRecord(CareRecord careRecord);
 }

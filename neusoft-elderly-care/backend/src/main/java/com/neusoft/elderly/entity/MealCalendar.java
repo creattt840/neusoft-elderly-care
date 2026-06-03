@@ -3,6 +3,7 @@ package com.neusoft.elderly.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 public class MealCalendar {
     @TableId(type = IdType.AUTO)
     private Long id;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate mealDate;
     private Integer mealType;
     private String menuContent;

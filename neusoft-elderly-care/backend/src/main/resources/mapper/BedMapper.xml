@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.BedMapper">
+
+    <select id="countBedPage" resultType="long">
+        SELECT COUNT(*)
+        FROM bed
+    </select>
+
+    <select id="countOccupiedBedsExcludingMaintenance" resultType="long">
+        SELECT COUNT(*)
+        FROM bed b
+        LEFT JOIN room r ON b.room_id = r.id
+        WHERE b.status = 1
+          AND (r.status IS NULL OR r.status != 2)
+    </select>
+
+    <select id="selectBedPage" resultType="com.neusoft.elderly.vo.BedVO">
+        SELECT
+            b.id,
+            b.room_id AS roomId,
+            b.bed_no AS bedNo,
+            b.status,
+            b.elderly_id AS elderlyId,
+            r.room_no AS roomNo,
+            r.status AS roomStatus,
+            e.name AS elderlyName,
+            e.gender AS elderlyGender,
+            e.age AS elderlyAge,
+            e.emergency_contact AS elderlyEmergencyContact,
+            e.emergency_phone AS elderlyEmergencyPhone,
+            e.check_in_date AS checkInDate
+        FROM bed b
+        INNER JOIN (
+            SELECT b2.id
+            FROM bed b2
+            LEFT JOIN room r2 ON b2.room_id = r2.id
+            ORDER BY r2.room_no ASC, b2.bed_no ASC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON b.id = page_ids.id
+        LEFT JOIN room r ON b.room_id = r.id
+        LEFT JOIN elderly e ON b.elderly_id = e.id
+        ORDER BY r.room_no ASC, b.bed_no ASC
+    </select>
+
+</mapper>

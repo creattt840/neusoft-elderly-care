@@ -1,16 +1,16 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.entity.CareItem;
-import com.neusoft.elderly.mapper.CareItemMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.CareItemVO;
 
 import java.util.List;
 
-@Service
-public class CareItemService extends ServiceImpl<CareItemMapper, CareItem> {
+public interface CareItemService extends IService<CareItem> {
 
-    public List<CareItem> getByCareLevelId(Long careLevelId) {
-        return baseMapper.selectByCareLevelId(careLevelId);
-    }
+    List<CareItemVO> listByCareLevelId(Long careLevelId);
+
+    PageResult<CareItemVO> pageCareItemVOs(Page<CareItem> page, Long careLevelId);
 }

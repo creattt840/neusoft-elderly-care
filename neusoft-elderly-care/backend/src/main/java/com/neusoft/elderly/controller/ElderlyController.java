@@ -1,11 +1,17 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.common.Result;
 import com.neusoft.elderly.entity.Elderly;
 import com.neusoft.elderly.service.ElderlyService;
+import com.neusoft.elderly.service.StatisticsService;
+import com.neusoft.elderly.vo.BedVO;
+import com.neusoft.elderly.vo.ElderlyVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/elderly")
@@ -14,18 +20,31 @@ public class ElderlyController {
     @Autowired
     private ElderlyService elderlyService;
 
+    @Autowired
+    private StatisticsService statisticsService;
+
     @GetMapping("/page")
-    public Result<Page<Elderly>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                       @RequestParam(defaultValue = "10") Integer pageSize,
-                                       @RequestParam(required = false) String name,
-                                       @RequestParam(required = false) Integer status) {
+    public Result<PageResult<ElderlyVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
+                                              @RequestParam(defaultValue = "10") Integer pageSize,
+                                              @RequestParam(required = false) String name,
+                                              @RequestParam(required = false) Integer status) {
         Page<Elderly> page = new Page<>(pageNum, pageSize);
-        return Result.success(elderlyService.page(page));
+        return Result.success(elderlyService.pageWithInfo(page, name, status));
+    }
+
+    @GetMapping("/statistics")
+    public Result<java.util.Map<String, Object>> statistics() {
+        return Result.success(statisticsService.getElderlyCountStatistics());
+    }
+
+    @GetMapping("/{id}/available-beds")
+    public Result<List<BedVO>> availableBeds(@PathVariable Long id) {
+        return Result.success(elderlyService.getAvailableBedsForEdit(id));
     }
 
     @GetMapping("/{id}")
-    public Result<Elderly> getById(@PathVariable Long id) {
-        return Result.success(elderlyService.getById(id));
+    public Result<ElderlyVO> getById(@PathVariable Long id) {
+        return Result.success(elderlyService.getDetail(id));
     }
 
     @PostMapping
@@ -35,12 +54,14 @@ public class ElderlyController {
 
     @PutMapping
     public Result<Boolean> update(@RequestBody Elderly elderly) {
-        return Result.success(elderlyService.updateById(elderly));
+        elderlyService.updateElderly(elderly);
+        return Result.success(true);
     }
 
     @DeleteMapping("/{id}")
     public Result<Boolean> delete(@PathVariable Long id) {
-        return Result.success(elderlyService.removeById(id));
+        elderlyService.removeElderly(id);
+        return Result.success(true);
     }
 
     @PostMapping("/check-in")
@@ -53,13 +74,5 @@ public class ElderlyController {
     public Result<Boolean> checkOut(@PathVariable Long id) {
         elderlyService.checkOut(id);
         return Result.success(true);
-    }
-
-    @GetMapping("/statistics")
-    public Result<java.util.Map<String, Object>> statistics() {
-        java.util.Map<String, Object> map = new java.util.HashMap<>();
-        map.put("activeCount", elderlyService.countActiveElderly());
-        map.put("checkedOutCount", elderlyService.countCheckedOutElderly());
-        return Result.success(map);
     }
 }

@@ -7,14 +7,43 @@
 
     <el-card>
       <el-table :data="tableData" v-loading="loading" border>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="roomId" label="所属房间" width="120" />
-        <el-table-column prop="bedNo" label="床位号" width="100" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="roomNo" label="所属房间" width="100" />
+        <el-table-column prop="bedNo" label="床位号" width="90" />
+        <el-table-column label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 0 ? 'success' : 'info'">
-              {{ row.status === 0 ? '空闲' : '已入住' }}
+            <el-tag :type="getStatusTagType(row)">
+              {{ getStatusLabel(row) }}
             </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="入住老人" min-width="100">
+          <template #default="{ row }">
+            {{ isOccupied(row) ? row.elderlyName : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="性别" width="70">
+          <template #default="{ row }">
+            {{ isOccupied(row) ? formatGender(row.elderlyGender) : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="年龄" width="70">
+          <template #default="{ row }">
+            {{ isOccupied(row) ? row.elderlyAge : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="紧急联系人" width="110">
+          <template #default="{ row }">
+            {{ isOccupied(row) ? (row.elderlyEmergencyContact || '-') : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="紧急电话" width="120">
+          <template #default="{ row }">
+            {{ isOccupied(row) ? (row.elderlyEmergencyPhone || '-') : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="入住时间" width="120">
+          <template #default="{ row }">
+            {{ isOccupied(row) ? formatCheckInDate(row.checkInDate) : '-' }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
@@ -24,6 +53,16 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-pagination
+        v-model:current-page="pageNum"
+        :page-size="10"
+        :total="total"
+        layout="total, prev, pager, next, jumper"
+        background
+        class="pagination"
+        @current-change="loadData"
+      />
     </el-card>
 
     <el-dialog :title="dialogTitle" v-model="dialogVisible" width="500px">
@@ -33,7 +72,7 @@
             <el-option
               v-for="item in roomList"
               :key="item.id"
-              :label="item.roomNo"
+              :label="formatRoomLabel(item)"
               :value="item.id"
             />
           </el-select>
@@ -53,11 +92,14 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 import { bedApi, roomApi } from '../../api/elderly'
 
 const loading = ref(false)
 const tableData = ref([])
 const roomList = ref([])
+const pageNum = ref(1)
+const total = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const isAdd = ref(false)
@@ -74,13 +116,48 @@ const rules = {
   bedNo: [{ required: true, message: '请输入床位号', trigger: 'blur' }]
 }
 
+const isRoomMaintaining = (row) => Number(row.roomStatus) === 2
+
+const isOccupied = (row) => !isRoomMaintaining(row) && Number(row.status) === 1
+
+const getStatusLabel = (row) => {
+  if (isRoomMaintaining(row)) return '维修中'
+  return Number(row.status) === 1 ? '已入住' : '空闲'
+}
+
+const getStatusTagType = (row) => {
+  if (isRoomMaintaining(row)) return 'danger'
+  return Number(row.status) === 1 ? 'info' : 'success'
+}
+
+const formatGender = (gender) => {
+  return Number(gender) === 1 ? '男' : Number(gender) === 2 ? '女' : '-'
+}
+
+const formatCheckInDate = (date) => {
+  if (!date) return '-'
+  return dayjs(date).format('YYYY-MM-DD')
+}
+
+const formatRoomLabel = (room) => {
+  const suffix = Number(room.status) === 2 ? '（维修中）' : ''
+  return `${room.roomNo}${suffix}`
+}
+
 const loadData = async () => {
   loading.value = true
-  const res = await bedApi.list()
-  if (res.code === 200) {
-    tableData.value = res.data
+  try {
+    const res = await bedApi.page({
+      pageNum: pageNum.value,
+      pageSize: 10
+    })
+    if (res.code === 200) {
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 const loadRooms = async () => {
@@ -100,7 +177,11 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   isAdd.value = false
   dialogTitle.value = '编辑床位'
-  Object.assign(form, row)
+  Object.assign(form, {
+    id: row.id,
+    roomId: row.roomId,
+    bedNo: row.bedNo
+  })
   dialogVisible.value = true
 }
 
@@ -131,10 +212,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.pagination {
+  margin-top: 20px;
+  justify-content: flex-end;
 }
 </style>

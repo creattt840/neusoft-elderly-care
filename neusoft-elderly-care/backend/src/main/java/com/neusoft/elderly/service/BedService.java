@@ -1,28 +1,28 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.entity.Bed;
-import com.neusoft.elderly.mapper.BedMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.BedVO;
 
 import java.util.List;
 
-@Service
-public class BedService extends ServiceImpl<BedMapper, Bed> {
+public interface BedService extends IService<Bed> {
 
-    public List<Bed> getBedsByRoomId(Long roomId) {
-        return baseMapper.selectByRoomId(roomId);
-    }
+    List<BedVO> listBedVOs();
 
-    public List<Bed> getAvailableBeds() {
-        return baseMapper.selectAvailableBeds();
-    }
+    PageResult<BedVO> pageBedVOs(Page<Bed> page);
 
-    public long countAvailableBeds() {
-        return baseMapper.selectAvailableBeds().size();
-    }
+    List<BedVO> getBedVOsByRoomId(Long roomId);
 
-    public long countOccupiedBeds() {
-        return baseMapper.selectCount(null) - countAvailableBeds();
-    }
+    List<BedVO> getAvailableBedVOs();
+
+    BedVO getBedVO(Long id);
+
+    void validateBedAssignable(Long bedId, Long elderlyId);
+
+    long countAvailableBeds();
+
+    long countOccupiedBeds();
 }

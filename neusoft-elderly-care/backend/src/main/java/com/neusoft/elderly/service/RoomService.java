@@ -1,10 +1,18 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.entity.Room;
-import com.neusoft.elderly.mapper.RoomMapper;
-import org.springframework.stereotype.Service;
+import com.neusoft.elderly.vo.RoomVO;
 
-@Service
-public class RoomService extends ServiceImpl<RoomMapper, Room> {
+import java.util.List;
+
+public interface RoomService extends IService<Room> {
+
+    List<RoomVO> listRoomVOs();
+
+    RoomVO getRoomVO(Long id);
+
+    PageResult<RoomVO> pageRoomVOs(Page<Room> page);
 }

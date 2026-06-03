@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.CareItemMapper">
+
+    <select id="countCareItemPage" resultType="long">
+        SELECT COUNT(*)
+        FROM care_item ci
+        <where>
+            <if test="careLevelId != null">
+                ci.care_level_id = #{careLevelId}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectCareItemPage" resultType="com.neusoft.elderly.vo.CareItemVO">
+        SELECT
+            ci.id,
+            ci.item_name AS itemName,
+            ci.care_level_id AS careLevelId,
+            cl.level_name AS levelName,
+            ci.frequency,
+            ci.description,
+            ci.sort_order AS sortOrder,
+            ci.create_time AS createTime
+        FROM care_item ci
+        INNER JOIN (
+            SELECT ci2.id
+            FROM care_item ci2
+            <where>
+                <if test="careLevelId != null">
+                    ci2.care_level_id = #{careLevelId}
+                </if>
+            </where>
+            ORDER BY ci2.sort_order ASC, ci2.id ASC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON ci.id = page_ids.id
+        LEFT JOIN care_level cl ON ci.care_level_id = cl.id
+        ORDER BY ci.sort_order ASC, ci.id ASC
+    </select>
+
+    <select id="selectCareItemList" resultType="com.neusoft.elderly.vo.CareItemVO">
+        SELECT
+            ci.id,
+            ci.item_name AS itemName,
+            ci.care_level_id AS careLevelId,
+            cl.level_name AS levelName,
+            ci.frequency,
+            ci.description,
+            ci.sort_order AS sortOrder,
+            ci.create_time AS createTime
+        FROM care_item ci
+        LEFT JOIN care_level cl ON ci.care_level_id = cl.id
+        <where>
+            <if test="careLevelId != null">
+                ci.care_level_id = #{careLevelId}
+            </if>
+        </where>
+        ORDER BY ci.sort_order ASC, ci.id ASC
+    </select>
+
+</mapper>

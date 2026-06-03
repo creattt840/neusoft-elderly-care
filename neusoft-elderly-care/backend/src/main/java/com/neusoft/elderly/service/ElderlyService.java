@@ -1,64 +1,31 @@
 package com.neusoft.elderly.service;
 
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.entity.Elderly;
-import com.neusoft.elderly.entity.Bed;
-import com.neusoft.elderly.mapper.ElderlyMapper;
-import com.neusoft.elderly.mapper.BedMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
+import com.neusoft.elderly.vo.BedVO;
+import com.neusoft.elderly.vo.ElderlyVO;
 
-@Service
-public class ElderlyService extends ServiceImpl<ElderlyMapper, Elderly> {
+import java.util.List;
 
-    @Autowired
-    private BedMapper bedMapper;
+public interface ElderlyService extends IService<Elderly> {
 
-    @Transactional
-    public void checkIn(Elderly elderly, Long bedId) {
-        // 校验床位是否存在
-        Bed bed = bedMapper.selectById(bedId);
-        Assert.notNull(bed, "床位不存在");
+    PageResult<ElderlyVO> pageWithInfo(Page<Elderly> page, String name, Integer status);
 
-        // 校验床位是否已被占用
-        if (bed.getStatus() != null && bed.getStatus() == 1) {
-            throw new IllegalStateException("该床位已被占用");
-        }
+    ElderlyVO getDetail(Long id);
 
-        elderly.setBedId(bedId);
-        elderly.setStatus(1);
-        baseMapper.insert(elderly);
+    List<BedVO> getAvailableBedsForEdit(Long elderlyId);
 
-        bed.setStatus(1);
-        bed.setElderlyId(elderly.getId());
-        bedMapper.updateById(bed);
-    }
+    void checkIn(Elderly elderly, Long bedId);
 
-    @Transactional
-    public void checkOut(Long elderlyId) {
-        Elderly elderly = baseMapper.selectById(elderlyId);
-        Assert.notNull(elderly, "老人信息不存在");
+    void updateElderly(Elderly elderly);
 
-        if (elderly.getBedId() != null) {
-            Bed bed = bedMapper.selectById(elderly.getBedId());
-            if (bed != null) {
-                bed.setStatus(0);
-                bed.setElderlyId(null);
-                bedMapper.updateById(bed);
-            }
-        }
-        elderly.setStatus(2);
-        elderly.setBedId(null);
-        baseMapper.updateById(elderly);
-    }
+    void checkOut(Long elderlyId);
 
-    public Long countActiveElderly() {
-        return baseMapper.countActiveElderly();
-    }
+    void removeElderly(Long id);
 
-    public Long countCheckedOutElderly() {
-        return baseMapper.countCheckedOutElderly();
-    }
+    Long countActiveElderly();
+
+    Long countCheckedOutElderly();
 }

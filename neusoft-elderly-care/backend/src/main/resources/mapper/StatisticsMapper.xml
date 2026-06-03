@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.StatisticsMapper">
+
+    <select id="selectCheckInRecords" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
+        SELECT
+            r.room_no AS roomNo,
+            b.bed_no AS bedNo,
+            e.name AS elderlyName,
+            e.age AS age,
+            ci.check_in_date AS recordDate,
+            ci.create_time AS recordTime
+        FROM check_in ci
+        LEFT JOIN elderly e ON ci.elderly_id = e.id
+        LEFT JOIN bed b ON ci.bed_id = b.id
+        LEFT JOIN room r ON b.room_id = r.id
+        WHERE ci.check_in_date &gt;= #{startDate}
+          AND ci.check_in_date &lt;= #{endDate}
+        ORDER BY ci.check_in_date DESC, ci.id DESC
+    </select>
+
+    <select id="selectCheckOutRecords" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
+        SELECT
+            r.room_no AS roomNo,
+            b.bed_no AS bedNo,
+            e.name AS elderlyName,
+            e.age AS age,
+            co.check_out_date AS recordDate,
+            co.create_time AS recordTime
+        FROM check_out co
+        LEFT JOIN elderly e ON co.elderly_id = e.id
+        LEFT JOIN bed b ON co.bed_id = b.id
+        LEFT JOIN room r ON b.room_id = r.id
+        WHERE co.check_out_date &gt;= #{startDate}
+          AND co.check_out_date &lt;= #{endDate}
+        ORDER BY co.check_out_date DESC, co.id DESC
+    </select>
+
+    <select id="selectCheckInRecordsFromElderly" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
+        SELECT
+            r.room_no AS roomNo,
+            b.bed_no AS bedNo,
+            e.name AS elderlyName,
+            e.age AS age,
+            e.check_in_date AS recordDate,
+            e.create_time AS recordTime
+        FROM elderly e
+        LEFT JOIN bed b ON e.bed_id = b.id
+        LEFT JOIN room r ON b.room_id = r.id
+        WHERE e.check_in_date IS NOT NULL
+          AND e.check_in_date &gt;= #{startDate}
+          AND e.check_in_date &lt;= #{endDate}
+        ORDER BY e.check_in_date DESC, e.id DESC
+    </select>
+
+    <select id="selectCheckOutRecordsFromElderly" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
+        SELECT
+            '-' AS roomNo,
+            '-' AS bedNo,
+            e.name AS elderlyName,
+            e.age AS age,
+            DATE(e.update_time) AS recordDate,
+            e.update_time AS recordTime
+        FROM elderly e
+        WHERE e.status = 2
+          AND DATE(e.update_time) &gt;= #{startDate}
+          AND DATE(e.update_time) &lt;= #{endDate}
+        ORDER BY e.update_time DESC, e.id DESC
+    </select>
+
+    <select id="selectRecentActiveOutings" resultType="com.neusoft.elderly.vo.OutingVO">
+        SELECT
+            o.id,
+            o.elderly_id AS elderlyId,
+            e.name AS elderlyName,
+            o.outing_type AS outingType,
+            o.destination,
+            o.start_time AS startTime,
+            o.status
+        FROM outing o
+        LEFT JOIN elderly e ON o.elderly_id = e.id
+        WHERE o.status = 0
+        ORDER BY ABS(TIMESTAMPDIFF(SECOND, o.start_time, NOW())) ASC
+        LIMIT #{limit}
+    </select>
+
+</mapper>
