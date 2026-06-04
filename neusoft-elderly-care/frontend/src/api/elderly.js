@@ -86,6 +86,7 @@ export const mealApi = {
 
 export const serviceApi = {
   list: (type) => api.get('/service/list', { params: { type } }),
+  page: (params) => api.get('/service/page', { params }),
   save: (data) => api.post('/service', data),
   update: (data) => api.put('/service', data),
   delete: (id) => api.delete(`/service/${id}`),

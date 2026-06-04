@@ -6,6 +6,26 @@
     </div>
 
     <el-card>
+      <el-form :inline="true" :model="searchForm" class="search-form">
+        <el-form-item label="服务类型">
+          <el-select
+            v-model="searchForm.type"
+            placeholder="全部类型"
+            clearable
+            style="width: 140px"
+            @change="handleSearch"
+          >
+            <el-option label="基础服务" :value="1" />
+            <el-option label="增值服务" :value="2" />
+            <el-option label="医疗服务" :value="3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
+          <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="tableData" v-loading="loading" border>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="serviceName" label="服务名称" />
@@ -14,7 +34,7 @@
             {{ row.serviceType === 1 ? '基础服务' : row.serviceType === 2 ? '增值服务' : '医疗服务' }}
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="描述" />
+        <el-table-column prop="description" label="描述" show-overflow-tooltip />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'info'">
@@ -29,6 +49,16 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-pagination
+        v-model:current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next, jumper"
+        background
+        class="pagination"
+        @current-change="loadData"
+      />
     </el-card>
 
     <el-dialog :title="dialogTitle" v-model="dialogVisible" width="500px">
@@ -68,10 +98,17 @@ import { serviceApi } from '../../api/elderly'
 
 const loading = ref(false)
 const tableData = ref([])
+const pageNum = ref(1)
+const pageSize = 10
+const total = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const isAdd = ref(false)
 const formRef = ref()
+
+const searchForm = reactive({
+  type: null
+})
 
 const form = reactive({
   id: null,
@@ -83,11 +120,29 @@ const form = reactive({
 
 const loadData = async () => {
   loading.value = true
-  const res = await serviceApi.list()
-  if (res.code === 200) {
-    tableData.value = res.data
+  try {
+    const params = { pageNum: pageNum.value, pageSize }
+    if (searchForm.type != null) {
+      params.type = searchForm.type
+    }
+    const res = await serviceApi.page(params)
+    if (res.code === 200) {
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
+  } finally {
+    loading.value = false
   }
-  loading.value = false
+}
+
+const handleSearch = () => {
+  pageNum.value = 1
+  loadData()
+}
+
+const handleReset = () => {
+  searchForm.type = null
+  handleSearch()
 }
 
 const handleAdd = () => {
@@ -128,3 +183,13 @@ onMounted(() => {
 })
 </script>
 
+<style scoped>
+.search-form {
+  margin-bottom: 16px;
+}
+
+.pagination {
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+</style>

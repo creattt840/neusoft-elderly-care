@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.RoomMapper">
+
+    <select id="countRoomPage" resultType="long">
+        SELECT COUNT(*)
+        FROM room
+    </select>
+
+    <select id="selectRoomPage" resultType="com.neusoft.elderly.vo.RoomVO">
+        SELECT
+            r.id,
+            r.room_no AS roomNo,
+            r.room_type AS roomType,
+            r.floor,
+            r.capacity,
+            r.status,
+            r.remark,
+            r.create_time AS createTime
+        FROM room r
+        INNER JOIN (
+            SELECT r2.id
+            FROM room r2
+            ORDER BY r2.floor ASC, r2.room_no ASC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON r.id = page_ids.id
+        ORDER BY r.floor ASC, r.room_no ASC
+    </select>
+
+</mapper>

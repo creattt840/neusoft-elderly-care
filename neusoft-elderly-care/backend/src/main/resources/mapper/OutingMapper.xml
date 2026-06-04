@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.OutingMapper">
+
+    <select id="countOutingPage" resultType="long">
+        SELECT COUNT(*)
+        FROM outing o
+        <where>
+            <if test="status != null">
+                o.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectOutingPage" resultType="com.neusoft.elderly.vo.OutingVO">
+        SELECT
+            o.id,
+            o.elderly_id AS elderlyId,
+            e.name AS elderlyName,
+            e.phone AS elderlyPhone,
+            o.outing_type AS outingType,
+            o.start_time AS startTime,
+            o.expected_return_time AS expectedReturnTime,
+            o.actual_return_time AS actualReturnTime,
+            o.accompanier,
+            o.accompanier_phone AS accompanierPhone,
+            o.destination,
+            o.reason,
+            o.status,
+            o.create_time AS createTime
+        FROM outing o
+        INNER JOIN (
+            SELECT o2.id
+            FROM outing o2
+            <where>
+                <if test="status != null">
+                    o2.status = #{status}
+                </if>
+            </where>
+            ORDER BY o2.start_time DESC, o2.id DESC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON o.id = page_ids.id
+        LEFT JOIN elderly e ON o.elderly_id = e.id
+        ORDER BY o.start_time DESC, o.id DESC
+    </select>
+
+</mapper>

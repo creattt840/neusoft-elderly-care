@@ -5,18 +5,28 @@
       <el-button type="primary" @click="handleAdd">登记外出</el-button>
     </div>
 
-    <el-card>
-      <el-tabs v-model="activeTab">
+    <el-card v-loading="loading">
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
         <el-tab-pane label="全部记录" name="all">
           <outing-table :data="tableData" @refresh="loadData" />
         </el-tab-pane>
         <el-tab-pane label="外出中" name="active">
-          <outing-table :data="activeData" @refresh="loadData" />
+          <outing-table :data="tableData" @refresh="loadData" />
         </el-tab-pane>
         <el-tab-pane label="已返回" name="returned">
-          <outing-table :data="returnedData" @refresh="loadData" />
+          <outing-table :data="tableData" @refresh="loadData" />
         </el-tab-pane>
       </el-tabs>
+
+      <el-pagination
+        v-model:current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next, jumper"
+        background
+        class="pagination"
+        @current-change="loadData"
+      />
     </el-card>
 
     <el-dialog title="登记外出" v-model="dialogVisible" width="600px">
@@ -74,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { outingApi, elderlyApi } from '../../api/elderly'
 import OutingTable from './OutingTable.vue'
@@ -82,6 +92,9 @@ import OutingTable from './OutingTable.vue'
 const activeTab = ref('all')
 const loading = ref(false)
 const tableData = ref([])
+const pageNum = ref(1)
+const pageSize = 10
+const total = ref(0)
 const elderlyList = ref([])
 const dialogVisible = ref(false)
 const formRef = ref()
@@ -103,21 +116,33 @@ const rules = {
   startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }]
 }
 
-const activeData = computed(() => {
-  return tableData.value.filter(item => item.status === 0)
-})
-
-const returnedData = computed(() => {
-  return tableData.value.filter(item => item.status === 1)
-})
+const getStatusParam = () => {
+  if (activeTab.value === 'active') return 0
+  if (activeTab.value === 'returned') return 1
+  return undefined
+}
 
 const loadData = async () => {
   loading.value = true
-  const res = await outingApi.list()
-  if (res.code === 200) {
-    tableData.value = res.data
+  try {
+    const params = { pageNum: pageNum.value, pageSize }
+    const status = getStatusParam()
+    if (status !== undefined) {
+      params.status = status
+    }
+    const res = await outingApi.page(params)
+    if (res.code === 200) {
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
+  } finally {
+    loading.value = false
   }
-  loading.value = false
+}
+
+const handleTabChange = () => {
+  pageNum.value = 1
+  loadData()
 }
 
 const loadElderly = async () => {
@@ -149,3 +174,9 @@ onMounted(() => {
 })
 </script>
 
+<style scoped>
+.pagination {
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+</style>

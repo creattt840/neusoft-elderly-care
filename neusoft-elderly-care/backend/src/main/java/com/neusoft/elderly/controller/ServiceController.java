@@ -1,5 +1,7 @@
 package com.neusoft.elderly.controller;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.neusoft.elderly.common.PageResult;
 import com.neusoft.elderly.common.Result;
 import com.neusoft.elderly.entity.ServiceInfo;
 import com.neusoft.elderly.entity.ServiceSubscription;
@@ -25,6 +27,14 @@ public class ServiceController {
     @GetMapping("/list")
     public Result<List<ServiceInfoVO>> list(@RequestParam(required = false) Integer type) {
         return Result.success(serviceInfoService.listServiceInfoVOs(type));
+    }
+
+    @GetMapping("/page")
+    public Result<PageResult<ServiceInfoVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
+                                                  @RequestParam(defaultValue = "10") Integer pageSize,
+                                                  @RequestParam(required = false) Integer type) {
+        Page<ServiceInfo> page = new Page<>(pageNum, pageSize);
+        return Result.success(serviceInfoService.pageServiceInfoVOs(page, type));
     }
 
     @PostMapping

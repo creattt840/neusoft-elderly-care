@@ -14,7 +14,7 @@ public interface OutingService extends IService<Outing> {
 
     List<OutingVO> listActiveOutingVOs();
 
-    PageResult<OutingVO> pageOutingVOs(Page<Outing> page);
+    PageResult<OutingVO> pageOutingVOs(Page<Outing> page, Integer status);
 
     OutingVO getOutingVO(Long id);
 

@@ -29,11 +29,13 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
 
     @Override
     public PageResult<RoomVO> pageRoomVOs(Page<Room> page) {
-        Page<Room> result = baseMapper.selectPage(page, null);
-        List<RoomVO> list = result.getRecords().stream()
-                .map(this::toRoomVO)
-                .collect(Collectors.toList());
-        return PageResult.of(result, list);
+        long total = baseMapper.countRoomPage();
+        if (total == 0) {
+            return PageResult.empty(page.getCurrent(), page.getSize());
+        }
+        long offset = (page.getCurrent() - 1) * page.getSize();
+        List<RoomVO> list = baseMapper.selectRoomPage(offset, page.getSize());
+        return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
     private RoomVO toRoomVO(Room room) {

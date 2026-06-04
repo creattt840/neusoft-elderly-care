@@ -30,9 +30,10 @@ public class OutingController {
 
     @GetMapping("/page")
     public Result<PageResult<OutingVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                            @RequestParam(defaultValue = "10") Integer pageSize) {
+                                            @RequestParam(defaultValue = "10") Integer pageSize,
+                                            @RequestParam(required = false) Integer status) {
         Page<Outing> page = new Page<>(pageNum, pageSize);
-        return Result.success(outingService.pageOutingVOs(page));
+        return Result.success(outingService.pageOutingVOs(page, status));
     }
 
     @GetMapping("/{id}")

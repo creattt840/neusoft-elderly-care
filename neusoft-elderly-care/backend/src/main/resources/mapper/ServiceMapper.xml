@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.elderly.mapper.ServiceMapper">
+
+    <sql id="servicePageWhere">
+        <where>
+            <if test="type != null">
+                s.service_type = #{type}
+            </if>
+        </where>
+    </sql>
+
+    <select id="countServicePage" resultType="long">
+        SELECT COUNT(*)
+        FROM service s
+        <include refid="servicePageWhere"/>
+    </select>
+
+    <select id="selectServicePage" resultType="com.neusoft.elderly.vo.ServiceInfoVO">
+        SELECT
+            s.id,
+            s.service_name AS serviceName,
+            s.service_type AS serviceType,
+            s.description,
+            s.status,
+            s.create_time AS createTime
+        FROM service s
+        INNER JOIN (
+            SELECT s2.id
+            FROM service s2
+            <where>
+                <if test="type != null">
+                    s2.service_type = #{type}
+                </if>
+            </where>
+            ORDER BY s2.id ASC
+            LIMIT #{offset}, #{pageSize}
+        ) page_ids ON s.id = page_ids.id
+        ORDER BY s.id ASC
+    </select>
+
+</mapper>

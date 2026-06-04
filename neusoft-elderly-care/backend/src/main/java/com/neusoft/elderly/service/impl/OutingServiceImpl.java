@@ -39,10 +39,14 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
     }
 
     @Override
-    public PageResult<OutingVO> pageOutingVOs(Page<Outing> page) {
-        Page<Outing> result = baseMapper.selectPage(page, null);
-        List<OutingVO> list = buildOutingVOs(result.getRecords());
-        return PageResult.of(result, list);
+    public PageResult<OutingVO> pageOutingVOs(Page<Outing> page, Integer status) {
+        long total = baseMapper.countOutingPage(status);
+        if (total == 0) {
+            return PageResult.empty(page.getCurrent(), page.getSize());
+        }
+        long offset = (page.getCurrent() - 1) * page.getSize();
+        List<OutingVO> list = baseMapper.selectOutingPage(offset, page.getSize(), status);
+        return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
     @Override

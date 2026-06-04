@@ -2,6 +2,27 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.neusoft.elderly.mapper.StatisticsMapper">
 
+    <sql id="checkInDateFilter">
+        (
+            (ci.check_in_date &gt;= #{startDate} AND ci.check_in_date &lt;= #{endDate})
+            OR (DATE(ci.create_time) &gt;= #{startDate} AND DATE(ci.create_time) &lt;= #{endDate})
+        )
+    </sql>
+
+    <sql id="checkOutDateFilter">
+        (
+            (co.check_out_date &gt;= #{startDate} AND co.check_out_date &lt;= #{endDate})
+            OR (DATE(co.create_time) &gt;= #{startDate} AND DATE(co.create_time) &lt;= #{endDate})
+        )
+    </sql>
+
+    <sql id="elderlyCheckInDateFilter">
+        (
+            (e.check_in_date &gt;= #{startDate} AND e.check_in_date &lt;= #{endDate})
+            OR (DATE(e.create_time) &gt;= #{startDate} AND DATE(e.create_time) &lt;= #{endDate})
+        )
+    </sql>
+
     <select id="selectCheckInRecords" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
         SELECT
             r.room_no AS roomNo,
@@ -14,9 +35,8 @@
         LEFT JOIN elderly e ON ci.elderly_id = e.id
         LEFT JOIN bed b ON ci.bed_id = b.id
         LEFT JOIN room r ON b.room_id = r.id
-        WHERE ci.check_in_date &gt;= #{startDate}
-          AND ci.check_in_date &lt;= #{endDate}
-        ORDER BY ci.check_in_date DESC, ci.id DESC
+        WHERE <include refid="checkInDateFilter"/>
+        ORDER BY ci.create_time DESC, ci.id DESC
     </select>
 
     <select id="selectCheckOutRecords" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
@@ -31,9 +51,8 @@
         LEFT JOIN elderly e ON co.elderly_id = e.id
         LEFT JOIN bed b ON co.bed_id = b.id
         LEFT JOIN room r ON b.room_id = r.id
-        WHERE co.check_out_date &gt;= #{startDate}
-          AND co.check_out_date &lt;= #{endDate}
-        ORDER BY co.check_out_date DESC, co.id DESC
+        WHERE <include refid="checkOutDateFilter"/>
+        ORDER BY co.create_time DESC, co.id DESC
     </select>
 
     <select id="selectCheckInRecordsFromElderly" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
@@ -48,23 +67,25 @@
         LEFT JOIN bed b ON e.bed_id = b.id
         LEFT JOIN room r ON b.room_id = r.id
         WHERE e.check_in_date IS NOT NULL
-          AND e.check_in_date &gt;= #{startDate}
-          AND e.check_in_date &lt;= #{endDate}
-        ORDER BY e.check_in_date DESC, e.id DESC
+          AND <include refid="elderlyCheckInDateFilter"/>
+        ORDER BY e.create_time DESC, e.id DESC
     </select>
 
     <select id="selectCheckOutRecordsFromElderly" resultType="com.neusoft.elderly.vo.ResidenceRecordVO">
         SELECT
-            '-' AS roomNo,
-            '-' AS bedNo,
+            IFNULL(r.room_no, '-') AS roomNo,
+            IFNULL(b.bed_no, '-') AS bedNo,
             e.name AS elderlyName,
             e.age AS age,
             DATE(e.update_time) AS recordDate,
             e.update_time AS recordTime
         FROM elderly e
+        LEFT JOIN bed b ON e.bed_id = b.id
+        LEFT JOIN room r ON b.room_id = r.id
         WHERE e.status = 2
-          AND DATE(e.update_time) &gt;= #{startDate}
-          AND DATE(e.update_time) &lt;= #{endDate}
+          AND (
+              (DATE(e.update_time) &gt;= #{startDate} AND DATE(e.update_time) &lt;= #{endDate})
+          )
         ORDER BY e.update_time DESC, e.id DESC
     </select>
 

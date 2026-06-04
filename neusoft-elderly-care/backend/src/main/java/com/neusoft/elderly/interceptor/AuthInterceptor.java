@@ -1,4 +1,4 @@
-package com.neusoft.elderly.config;
+package com.neusoft.elderly.interceptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.neusoft.elderly.common.AuthTokenUtils;

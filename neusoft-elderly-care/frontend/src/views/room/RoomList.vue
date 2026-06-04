@@ -30,6 +30,16 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <el-pagination
+        v-model:current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next, jumper"
+        background
+        class="pagination"
+        @current-change="loadData"
+      />
     </el-card>
 
     <el-dialog :title="dialogTitle" v-model="dialogVisible" width="500px">
@@ -75,6 +85,9 @@ import { roomApi } from '../../api/elderly'
 
 const loading = ref(false)
 const tableData = ref([])
+const pageNum = ref(1)
+const pageSize = 10
+const total = ref(0)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
 const isAdd = ref(false)
@@ -97,11 +110,15 @@ const rules = {
 
 const loadData = async () => {
   loading.value = true
-  const res = await roomApi.list()
-  if (res.code === 200) {
-    tableData.value = res.data
+  try {
+    const res = await roomApi.page({ pageNum: pageNum.value, pageSize })
+    if (res.code === 200) {
+      tableData.value = res.data.list
+      total.value = res.data.total
+    }
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 const handleAdd = () => {
@@ -145,3 +162,9 @@ onMounted(() => {
 })
 </script>
 
+<style scoped>
+.pagination {
+  margin-top: 20px;
+  justify-content: flex-end;
+}
+</style>

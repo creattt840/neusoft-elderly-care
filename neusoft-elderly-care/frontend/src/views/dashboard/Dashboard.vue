@@ -91,7 +91,7 @@
             <el-table-column prop="age" label="年龄" width="56" align="center" />
             <el-table-column :label="recordType === 'checkIn' ? '入住时间' : '退住时间'" min-width="150">
               <template #default="{ row }">
-                <span class="time-cell">{{ formatRecordTime(row.recordTime) }}</span>
+                <span class="time-cell">{{ formatRecordTime(row) }}</span>
               </template>
             </el-table-column>
             <template #empty>
@@ -245,10 +245,12 @@ const outingTagType = (type) => {
   return Number(type) === 1 ? 'warning' : Number(type) === 2 ? 'info' : 'danger'
 }
 
-const formatRecordTime = (value) => {
+const formatRecordTime = (row) => {
+  const value = row?.recordTime || row?.recordDate
   if (!value) return '-'
   const str = String(value)
   if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(str)) return str
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str
   const parsed = dayjs(str)
   return parsed.isValid() ? parsed.format('YYYY-MM-DD HH:mm:ss') : '-'
 }

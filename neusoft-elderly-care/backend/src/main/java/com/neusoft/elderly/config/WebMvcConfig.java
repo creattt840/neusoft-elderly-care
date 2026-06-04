@@ -1,5 +1,6 @@
 package com.neusoft.elderly.config;
 
+import com.neusoft.elderly.interceptor.AuthInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
