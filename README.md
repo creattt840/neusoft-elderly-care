@@ -1,4 +1,4 @@
-# 东软颐养中心管理系统
+# 颐养中心管理系统
 
 [![GitHub](https://img.shields.io/badge/GitHub-neusoft--elderly--care-blue)](https://github.com/creattt840/neusoft-elderly-care)
 
