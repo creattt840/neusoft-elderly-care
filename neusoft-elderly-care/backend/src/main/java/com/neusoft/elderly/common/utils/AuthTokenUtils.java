@@ -1,4 +1,4 @@
-package com.neusoft.elderly.common;
+package com.neusoft.elderly.common.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 

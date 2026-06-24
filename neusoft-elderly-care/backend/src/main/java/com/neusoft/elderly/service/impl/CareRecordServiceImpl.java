@@ -2,12 +2,16 @@ package com.neusoft.elderly.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.neusoft.elderly.common.BusinessException;
-import com.neusoft.elderly.common.PageResult;
+import com.neusoft.elderly.common.Result.PageResult;
+import com.neusoft.elderly.common.exception.BusinessException;
+import com.neusoft.elderly.common.constant.CacheNames;
 import com.neusoft.elderly.entity.CareRecord;
 import com.neusoft.elderly.mapper.CareRecordMapper;
 import com.neusoft.elderly.service.CareRecordService;
+import com.neusoft.elderly.service.PageCacheService;
 import com.neusoft.elderly.vo.CareRecordVO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,6 +20,9 @@ import java.util.List;
 
 @Service
 public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRecord> implements CareRecordService {
+
+    @Autowired
+    private PageCacheService pageCacheService;
 
     @Override
     public List<CareRecordVO> listByElderlyId(Long elderlyId) {
@@ -28,6 +35,8 @@ public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRec
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.CARE_RECORD_PAGE,
+            key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size, #elderlyId, #recordDate)")
     public PageResult<CareRecordVO> pageCareRecordVOs(Page<CareRecord> page, Long elderlyId, LocalDate recordDate) {
         long total = baseMapper.countCareRecordPage(elderlyId, recordDate);
         if (total == 0) {
@@ -51,7 +60,11 @@ public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRec
         if (careRecord.getStatus() == null) {
             careRecord.setStatus(0);
         }
-        return save(careRecord);
+        boolean saved = save(careRecord);
+        if (saved) {
+            pageCacheService.clearCareRecordRelated();
+        }
+        return saved;
     }
 
     @Override
@@ -60,7 +73,20 @@ public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRec
             throw new BusinessException("记录ID不能为空");
         }
         validateCareRecord(careRecord);
-        return updateById(careRecord);
+        boolean updated = updateById(careRecord);
+        if (updated) {
+            pageCacheService.clearCareRecordRelated();
+        }
+        return updated;
+    }
+
+    @Override
+    public boolean removeById(java.io.Serializable id) {
+        boolean removed = super.removeById(id);
+        if (removed) {
+            pageCacheService.clearCareRecordRelated();
+        }
+        return removed;
     }
 
     private void validateCareRecord(CareRecord careRecord) {

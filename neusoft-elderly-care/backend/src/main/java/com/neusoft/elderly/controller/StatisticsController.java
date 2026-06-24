@@ -1,6 +1,6 @@
 package com.neusoft.elderly.controller;
 
-import com.neusoft.elderly.common.Result;
+import com.neusoft.elderly.common.Result.Result;
 import com.neusoft.elderly.service.StatisticsService;
 import com.neusoft.elderly.vo.OutingVO;
 import com.neusoft.elderly.vo.ResidenceRecordVO;

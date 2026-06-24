@@ -1,4 +1,6 @@
-package com.neusoft.elderly.common;
+package com.neusoft.elderly.common.exception;
+
+import com.neusoft.elderly.common.web.GlobalExceptionHandler;
 
 /**
  * 业务异常类

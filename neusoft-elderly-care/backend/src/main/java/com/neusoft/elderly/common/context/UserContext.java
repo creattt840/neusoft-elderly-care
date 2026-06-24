@@ -1,4 +1,4 @@
-package com.neusoft.elderly.common;
+package com.neusoft.elderly.common.context;
 
 public final class UserContext {
 

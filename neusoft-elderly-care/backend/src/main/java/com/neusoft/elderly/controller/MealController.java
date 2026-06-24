@@ -1,8 +1,8 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.neusoft.elderly.common.PageResult;
-import com.neusoft.elderly.common.Result;
+import com.neusoft.elderly.common.Result.PageResult;
+import com.neusoft.elderly.common.Result.Result;
 import com.neusoft.elderly.entity.MealCalendar;
 import com.neusoft.elderly.entity.MealPlan;
 import com.neusoft.elderly.service.MealCalendarService;
@@ -55,8 +55,8 @@ public class MealController {
 
     @GetMapping("/plan/page")
     public Result<PageResult<MealPlanVO>> planPage(@RequestParam(defaultValue = "1") Integer pageNum,
-                                                  @RequestParam(defaultValue = "10") Integer pageSize,
-                                                  @RequestParam(required = false) String keyword) {
+                                                   @RequestParam(defaultValue = "10") Integer pageSize,
+                                                   @RequestParam(required = false) String keyword) {
         Page<MealPlan> page = new Page<>(pageNum, pageSize);
         return Result.success(mealPlanService.pageMealPlanVOs(page, keyword));
     }

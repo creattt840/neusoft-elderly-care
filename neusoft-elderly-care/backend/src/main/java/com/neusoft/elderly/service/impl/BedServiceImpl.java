@@ -2,17 +2,20 @@ package com.neusoft.elderly.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.neusoft.elderly.common.BusinessException;
-import com.neusoft.elderly.common.PageResult;
+import com.neusoft.elderly.common.Result.PageResult;
+import com.neusoft.elderly.common.exception.BusinessException;
+import com.neusoft.elderly.common.constant.CacheNames;
 import com.neusoft.elderly.entity.Bed;
 import com.neusoft.elderly.entity.Elderly;
 import com.neusoft.elderly.entity.Room;
 import com.neusoft.elderly.mapper.BedMapper;
 import com.neusoft.elderly.service.BedService;
 import com.neusoft.elderly.service.ElderlyService;
+import com.neusoft.elderly.service.PageCacheService;
 import com.neusoft.elderly.service.RoomService;
 import com.neusoft.elderly.vo.BedVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
@@ -35,12 +38,17 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
     @Autowired
     private ElderlyService elderlyService;
 
+    @Autowired
+    private PageCacheService pageCacheService;
+
     @Override
     public List<BedVO> listBedVOs() {
         return buildSortedBedVOs(list());
     }
 
     @Override
+    @Cacheable(cacheNames = CacheNames.BED_PAGE,
+            key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size)")
     public PageResult<BedVO> pageBedVOs(Page<Bed> page) {
         long total = baseMapper.countBedPage();
         if (total == 0) {
@@ -49,6 +57,33 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         long offset = (page.getCurrent() - 1) * page.getSize();
         List<BedVO> list = baseMapper.selectBedPage(offset, page.getSize());
         return PageResult.of(total, list, page.getCurrent(), page.getSize());
+    }
+
+    @Override
+    public boolean save(Bed entity) {
+        boolean saved = super.save(entity);
+        if (saved) {
+            pageCacheService.clearBedRelated();
+        }
+        return saved;
+    }
+
+    @Override
+    public boolean updateById(Bed entity) {
+        boolean updated = super.updateById(entity);
+        if (updated) {
+            pageCacheService.clearBedRelated();
+        }
+        return updated;
+    }
+
+    @Override
+    public boolean removeById(java.io.Serializable id) {
+        boolean removed = super.removeById(id);
+        if (removed) {
+            pageCacheService.clearBedRelated();
+        }
+        return removed;
     }
 
     @Override

@@ -1,8 +1,8 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.neusoft.elderly.common.PageResult;
-import com.neusoft.elderly.common.Result;
+import com.neusoft.elderly.common.Result.PageResult;
+import com.neusoft.elderly.common.Result.Result;
 import com.neusoft.elderly.entity.Outing;
 import com.neusoft.elderly.service.OutingService;
 import com.neusoft.elderly.vo.OutingVO;
@@ -30,8 +30,8 @@ public class OutingController {
 
     @GetMapping("/page")
     public Result<PageResult<OutingVO>> page(@RequestParam(defaultValue = "1") Integer pageNum,
-                                            @RequestParam(defaultValue = "10") Integer pageSize,
-                                            @RequestParam(required = false) Integer status) {
+                                             @RequestParam(defaultValue = "10") Integer pageSize,
+                                             @RequestParam(required = false) Integer status) {
         Page<Outing> page = new Page<>(pageNum, pageSize);
         return Result.success(outingService.pageOutingVOs(page, status));
     }

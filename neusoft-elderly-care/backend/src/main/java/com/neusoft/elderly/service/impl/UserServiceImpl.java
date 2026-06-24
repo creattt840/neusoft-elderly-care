@@ -1,7 +1,7 @@
 package com.neusoft.elderly.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.neusoft.elderly.common.BusinessException;
+import com.neusoft.elderly.common.exception.BusinessException;
 import com.neusoft.elderly.dto.UserLoginDTO;
 import com.neusoft.elderly.dto.UserRegisterDTO;
 import com.neusoft.elderly.entity.User;

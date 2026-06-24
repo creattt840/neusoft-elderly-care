@@ -1,8 +1,8 @@
 package com.neusoft.elderly.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.neusoft.elderly.common.PageResult;
-import com.neusoft.elderly.common.Result;
+import com.neusoft.elderly.common.Result.PageResult;
+import com.neusoft.elderly.common.Result.Result;
 import com.neusoft.elderly.entity.Room;
 import com.neusoft.elderly.service.RoomService;
 import com.neusoft.elderly.vo.RoomVO;

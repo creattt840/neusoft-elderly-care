@@ -1,4 +1,4 @@
-package com.neusoft.elderly.common;
+package com.neusoft.elderly.common.Result;
 
 public class Result<T> {
     private Integer code;

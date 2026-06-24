@@ -1,9 +1,9 @@
 package com.neusoft.elderly.interceptor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.neusoft.elderly.common.AuthTokenUtils;
-import com.neusoft.elderly.common.Result;
-import com.neusoft.elderly.common.UserContext;
+import com.neusoft.elderly.common.utils.AuthTokenUtils;
+import com.neusoft.elderly.common.Result.Result;
+import com.neusoft.elderly.common.context.UserContext;
 import com.neusoft.elderly.service.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

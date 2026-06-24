@@ -1,7 +1,7 @@
 package com.neusoft.elderly.controller;
 
-import com.neusoft.elderly.common.AuthTokenUtils;
-import com.neusoft.elderly.common.Result;
+import com.neusoft.elderly.common.utils.AuthTokenUtils;
+import com.neusoft.elderly.common.Result.Result;
 import com.neusoft.elderly.dto.UserLoginDTO;
 import com.neusoft.elderly.dto.UserRegisterDTO;
 import com.neusoft.elderly.service.UserService;

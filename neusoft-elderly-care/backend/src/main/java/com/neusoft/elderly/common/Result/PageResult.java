@@ -1,4 +1,4 @@
-package com.neusoft.elderly.common;
+package com.neusoft.elderly.common.Result;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
