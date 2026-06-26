@@ -7,27 +7,39 @@ import com.neusoft.elderly.common.constant.CacheNames;
 import com.neusoft.elderly.entity.ServiceInfo;
 import com.neusoft.elderly.mapper.ServiceMapper;
 import com.neusoft.elderly.service.PageCacheService;
+import com.neusoft.elderly.service.RelatedRecordCleanupService;
 import com.neusoft.elderly.service.ServiceInfoService;
 import com.neusoft.elderly.vo.ServiceInfoVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.Serializable;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 服务信息服务实现
+ */
 @Service
 public class ServiceInfoServiceImpl extends ServiceImpl<ServiceMapper, ServiceInfo> implements ServiceInfoService {
 
     @Autowired
     private PageCacheService pageCacheService;
 
+    @Autowired
+    private RelatedRecordCleanupService relatedRecordCleanupService;
+
+    /** 查询所有已启用服务 */
     @Override
     public List<ServiceInfo> getActiveServices() {
         return baseMapper.selectActiveServices();
     }
 
+    /** 根据类型查询已启用服务 */
     @Override
     public List<ServiceInfo> getActiveByType(Integer type) {
         return lambdaQuery()
@@ -36,12 +48,14 @@ public class ServiceInfoServiceImpl extends ServiceImpl<ServiceMapper, ServiceIn
                 .list();
     }
 
+    /** 查询服务列表 */
     @Override
     public List<ServiceInfoVO> listServiceInfoVOs(Integer type) {
         List<ServiceInfo> services = type != null ? getActiveByType(type) : list();
         return services.stream().map(this::toServiceInfoVO).collect(Collectors.toList());
     }
 
+    /** 分页查询服务列表，缓存 */
     @Override
     @Cacheable(cacheNames = CacheNames.SERVICE_PAGE,
             key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size, #type)")
@@ -55,6 +69,7 @@ public class ServiceInfoServiceImpl extends ServiceImpl<ServiceMapper, ServiceIn
         return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
+    /** 新增服务，清除缓存 */
     @Override
     public boolean save(ServiceInfo entity) {
         boolean saved = super.save(entity);
@@ -64,6 +79,7 @@ public class ServiceInfoServiceImpl extends ServiceImpl<ServiceMapper, ServiceIn
         return saved;
     }
 
+    /** 更新服务，清除缓存 */
     @Override
     public boolean updateById(ServiceInfo entity) {
         boolean updated = super.updateById(entity);
@@ -73,8 +89,11 @@ public class ServiceInfoServiceImpl extends ServiceImpl<ServiceMapper, ServiceIn
         return updated;
     }
 
+    /** 删除服务，清除缓存 */
     @Override
-    public boolean removeById(java.io.Serializable id) {
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(Serializable id) {
+        relatedRecordCleanupService.removeSubscriptionsByServiceId(Long.valueOf(id.toString()));
         boolean removed = super.removeById(id);
         if (removed) {
             pageCacheService.clearServiceRelated();

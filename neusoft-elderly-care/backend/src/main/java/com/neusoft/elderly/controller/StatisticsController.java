@@ -15,28 +15,35 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/statistics")
+/**
+ * 数据统计接口
+ */
 public class StatisticsController {
 
     @Autowired
     private StatisticsService statisticsService;
 
+    /** 控制台仪表盘数据 */
     @GetMapping("/dashboard")
     public Result<Map<String, Object>> dashboard() {
         return Result.success(statisticsService.getDashboardStatistics());
     }
 
+    /** 入住记录统计 */
     @GetMapping("/check-in-records")
     public Result<List<ResidenceRecordVO>> checkInRecords(
             @RequestParam(defaultValue = "today") String range) {
         return Result.success(statisticsService.listCheckInRecords(range));
     }
 
+    /** 退住记录统计 */
     @GetMapping("/check-out-records")
     public Result<List<ResidenceRecordVO>> checkOutRecords(
             @RequestParam(defaultValue = "today") String range) {
         return Result.success(statisticsService.listCheckOutRecords(range));
     }
 
+    /** 最近活跃外出记录 */
     @GetMapping("/recent-active-outings")
     public Result<List<OutingVO>> recentActiveOutings(
             @RequestParam(defaultValue = "10") Integer limit) {

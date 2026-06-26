@@ -18,6 +18,9 @@ import org.springframework.util.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 用户服务实现
+ */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
@@ -27,11 +30,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Autowired
     private TokenService tokenService;
 
+    /** 根据手机号查询用户 */
     @Override
     public User findByPhone(String phone) {
         return baseMapper.selectByPhone(phone);
     }
 
+    /** 用户注册 */
     @Override
     public UserVO register(UserRegisterDTO registerDTO) {
         User existUser = findByPhone(registerDTO.getPhone());
@@ -47,6 +52,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return toUserVO(user);
     }
 
+    /** 用户登录返回令牌 */
     @Override
     public Map<String, Object> loginWithToken(UserLoginDTO loginDTO) {
         User user = authenticate(loginDTO);
@@ -58,6 +64,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return result;
     }
 
+    /** 用户登出清除令牌 */
     @Override
     public void logout(String token) {
         if (StringUtils.hasText(token)) {

@@ -5,19 +5,20 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.neusoft.elderly.common.Result.PageResult;
+import com.neusoft.elderly.common.constant.CacheNames;
 import com.neusoft.elderly.common.exception.BusinessException;
 import com.neusoft.elderly.entity.Bed;
-import com.neusoft.elderly.entity.CheckIn;
-import com.neusoft.elderly.entity.CheckOut;
-import com.neusoft.elderly.entity.Elderly;
+import com.neusoft.elderly.entity.*;
+import com.neusoft.elderly.mapper.CareRecordMapper;
 import com.neusoft.elderly.mapper.ElderlyMapper;
-import com.neusoft.elderly.service.BedService;
-import com.neusoft.elderly.service.CheckInService;
-import com.neusoft.elderly.service.CheckOutService;
-import com.neusoft.elderly.service.ElderlyService;
+import com.neusoft.elderly.mapper.MealPlanMapper;
+import com.neusoft.elderly.mapper.OutingMapper;
+import com.neusoft.elderly.mapper.ServiceSubscriptionMapper;
+import com.neusoft.elderly.service.*;
 import com.neusoft.elderly.vo.BedVO;
 import com.neusoft.elderly.vo.ElderlyVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -27,6 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 老人信息服务实现
+ */
 @Service
 public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> implements ElderlyService {
 
@@ -39,7 +43,27 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
     @Autowired
     private CheckOutService checkOutService;
 
+    @Autowired
+    private PageCacheService pageCacheService;
+
+    @Autowired
+    private OutingMapper outingMapper;
+
+    @Autowired
+    private CareRecordMapper careRecordMapper;
+
+    @Autowired
+    private MealPlanMapper mealPlanMapper;
+
+    @Autowired
+    private ServiceSubscriptionMapper serviceSubscriptionMapper;
+
+    /** 分页查询老人列表含床位信息，缓存 */
     @Override
+    @Cacheable(
+            cacheNames = CacheNames.ELDERLY_PAGE,
+            key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size, #name, #status)"
+    )
     public PageResult<ElderlyVO> pageWithInfo(Page<Elderly> page, String name, Integer status) {
         LambdaQueryWrapper<Elderly> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(name)) {
@@ -57,12 +81,14 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
         return PageResult.of(result, list);
     }
 
+    /** 根据ID获取老人详情 */
     @Override
     public ElderlyVO getDetail(Long id) {
         Elderly elderly = baseMapper.selectById(id);
         return elderly == null ? null : toElderlyVO(elderly);
     }
 
+    /** 获取编辑时可选的床位 */
     @Override
     public List<BedVO> getAvailableBedsForEdit(Long elderlyId) {
         List<BedVO> beds = new ArrayList<>(bedService.getAvailableBedVOs());
@@ -83,6 +109,7 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
         return beds;
     }
 
+    /** 老人入住 */
     @Override
     @Transactional
     public void checkIn(Elderly elderly, Long bedId) {
@@ -104,8 +131,20 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
         checkIn.setBedId(bedId);
         checkIn.setCheckInDate(elderly.getCheckInDate());
         checkInService.save(checkIn);
+        pageCacheService.clearElderlyRelated();
     }
 
+    /** 新增老人，清除缓存 */
+    @Override
+    public boolean save(Elderly entity) {
+        boolean saved = super.save(entity);
+        if (saved) {
+            pageCacheService.clearElderlyRelated();
+        }
+        return saved;
+    }
+
+    /** 更新老人信息，清除缓存 */
     @Override
     @Transactional
     public void updateElderly(Elderly elderly) {
@@ -133,8 +172,10 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
 
         syncAddress(elderly);
         baseMapper.updateById(elderly);
+        pageCacheService.clearElderlyRelated();
     }
 
+    /** 删除老人释放床位，清除缓存 */
     @Override
     @Transactional
     public void removeElderly(Long id) {
@@ -145,9 +186,12 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
         if (elderly.getStatus() != null && elderly.getStatus() == 1 && elderly.getBedId() != null) {
             releaseBed(elderly.getBedId());
         }
+        removeRelatedRecords(id);
         removeById(id);
+        pageCacheService.clearElderlyRelated();
     }
 
+    /** 老人退住，清除缓存 */
     @Override
     @Transactional
     public void checkOut(Long elderlyId) {
@@ -168,13 +212,16 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
                 .eq(Elderly::getId, elderlyId)
                 .set(Elderly::getStatus, 2)
                 .set(Elderly::getBedId, null));
+        pageCacheService.clearElderlyRelated();
     }
 
+    /** 统计在住老人数量 */
     @Override
     public Long countActiveElderly() {
         return baseMapper.countActiveElderly();
     }
 
+    /** 统计已退住老人数量 */
     @Override
     public Long countCheckedOutElderly() {
         return baseMapper.countCheckedOutElderly();
@@ -214,11 +261,25 @@ public class ElderlyServiceImpl extends ServiceImpl<ElderlyMapper, Elderly> impl
         return vo;
     }
 
+    private void removeRelatedRecords(Long elderlyId) {
+        checkInService.remove(new LambdaQueryWrapper<CheckIn>().eq(CheckIn::getElderlyId, elderlyId));
+        checkOutService.remove(new LambdaQueryWrapper<CheckOut>().eq(CheckOut::getElderlyId, elderlyId));
+        outingMapper.delete(new LambdaQueryWrapper<Outing>().eq(Outing::getElderlyId, elderlyId));
+        careRecordMapper.delete(new LambdaQueryWrapper<CareRecord>().eq(CareRecord::getElderlyId, elderlyId));
+        mealPlanMapper.delete(new LambdaQueryWrapper<MealPlan>().eq(MealPlan::getElderlyId, elderlyId));
+        serviceSubscriptionMapper.delete(new LambdaQueryWrapper<ServiceSubscription>()
+                .eq(ServiceSubscription::getElderlyId, elderlyId));
+        baseMapper.deleteElderlyMealsByElderlyId(elderlyId);
+    }
+
     private void releaseBed(Long bedId) {
-        bedService.update(new LambdaUpdateWrapper<Bed>()
+        boolean updated = bedService.update(new LambdaUpdateWrapper<Bed>()
                 .eq(Bed::getId, bedId)
                 .set(Bed::getStatus, 0)
                 .set(Bed::getElderlyId, null));
+        if (updated) {
+            pageCacheService.clearBedRelated();
+        }
     }
 
     private void syncAddress(Elderly elderly) {

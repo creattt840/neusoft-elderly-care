@@ -24,6 +24,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 外出记录服务实现
+ */
 @Service
 public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> implements OutingService {
 
@@ -34,16 +37,19 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
     @Autowired
     private PageCacheService pageCacheService;
 
+    /** 查询全部外出记录 */
     @Override
     public List<OutingVO> listOutingVOs() {
         return buildOutingVOs(list());
     }
 
+    /** 查询进行中的外出记录 */
     @Override
     public List<OutingVO> listActiveOutingVOs() {
         return buildOutingVOs(getActiveOutings());
     }
 
+    /** 分页查询外出记录，缓存 */
     @Override
     @Cacheable(cacheNames = CacheNames.OUTING_PAGE,
             key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size, #status)")
@@ -57,6 +63,7 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
         return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
+    /** 新增外出记录，清除缓存 */
     @Override
     public boolean save(Outing entity) {
         boolean saved = super.save(entity);
@@ -66,6 +73,7 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
         return saved;
     }
 
+    /** 更新外出记录，清除缓存 */
     @Override
     public boolean updateById(Outing entity) {
         boolean updated = super.updateById(entity);
@@ -75,6 +83,7 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
         return updated;
     }
 
+    /** 删除外出记录，清除缓存 */
     @Override
     public boolean removeById(java.io.Serializable id) {
         boolean removed = super.removeById(id);
@@ -84,6 +93,7 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
         return removed;
     }
 
+    /** 根据ID查询外出详情 */
     @Override
     public OutingVO getOutingVO(Long id) {
         Outing outing = getById(id);
@@ -95,11 +105,13 @@ public class OutingServiceImpl extends ServiceImpl<OutingMapper, Outing> impleme
         return vo;
     }
 
+    /** 查询进行中的外出实体列表 */
     @Override
     public List<Outing> getActiveOutings() {
         return baseMapper.selectActiveOutings();
     }
 
+    /** 记录外出归来 */
     @Override
     public void returnOuting(Long id) {
         Outing outing = getById(id);

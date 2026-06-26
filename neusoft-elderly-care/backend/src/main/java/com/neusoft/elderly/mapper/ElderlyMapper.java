@@ -2,7 +2,9 @@ package com.neusoft.elderly.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.neusoft.elderly.entity.Elderly;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -17,4 +19,10 @@ public interface ElderlyMapper extends BaseMapper<Elderly> {
 
     @Select("SELECT COUNT(*) FROM elderly WHERE status = 2")
     Long countCheckedOutElderly();
+
+    @Delete("DELETE FROM elderly_meal WHERE elderly_id = #{elderlyId}")
+    int deleteElderlyMealsByElderlyId(@Param("elderlyId") Long elderlyId);
+
+    @Delete("DELETE FROM elderly_meal WHERE calendar_id = #{calendarId}")
+    int deleteElderlyMealsByCalendarId(@Param("calendarId") Long calendarId);
 }

@@ -18,22 +18,28 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 护理记录服务实现
+ */
 @Service
 public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRecord> implements CareRecordService {
 
     @Autowired
     private PageCacheService pageCacheService;
 
+    /** 根据老人ID查询护理记录 */
     @Override
     public List<CareRecordVO> listByElderlyId(Long elderlyId) {
         return baseMapper.selectCareRecordList(elderlyId, null);
     }
 
+    /** 根据日期查询护理记录 */
     @Override
     public List<CareRecordVO> listByDate(LocalDate date) {
         return baseMapper.selectCareRecordList(null, date);
     }
 
+    /** 分页查询护理记录，缓存 */
     @Override
     @Cacheable(cacheNames = CacheNames.CARE_RECORD_PAGE,
             key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size, #elderlyId, #recordDate)")
@@ -47,6 +53,7 @@ public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRec
         return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
+    /** 新增护理记录，清除缓存 */
     @Override
     public boolean saveCareRecord(CareRecord careRecord) {
         validateCareRecord(careRecord);
@@ -67,6 +74,7 @@ public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRec
         return saved;
     }
 
+    /** 更新护理记录，清除缓存 */
     @Override
     public boolean updateCareRecord(CareRecord careRecord) {
         if (careRecord.getId() == null) {
@@ -80,6 +88,7 @@ public class CareRecordServiceImpl extends ServiceImpl<CareRecordMapper, CareRec
         return updated;
     }
 
+    /** 删除护理记录，清除缓存 */
     @Override
     public boolean removeById(java.io.Serializable id) {
         boolean removed = super.removeById(id);

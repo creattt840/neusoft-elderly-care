@@ -17,17 +17,22 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 膳食计划服务实现
+ */
 @Service
 public class MealPlanServiceImpl extends ServiceImpl<MealPlanMapper, MealPlan> implements MealPlanService {
 
     @Autowired
     private PageCacheService pageCacheService;
 
+    /** 根据老人ID查询膳食计划 */
     @Override
     public MealPlanVO getMealPlanVOByElderlyId(Long elderlyId) {
         return baseMapper.selectMealPlanVOByElderlyId(elderlyId);
     }
 
+    /** 分页查询膳食计划，缓存 */
     @Override
     @Cacheable(cacheNames = CacheNames.MEAL_PLAN_PAGE,
             key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size, #keyword)")
@@ -42,6 +47,7 @@ public class MealPlanServiceImpl extends ServiceImpl<MealPlanMapper, MealPlan> i
         return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
+    /** 查询已分配膳食计划的老人ID */
     @Override
     public List<Long> listAssignedElderlyIds() {
         return list().stream()
@@ -49,6 +55,7 @@ public class MealPlanServiceImpl extends ServiceImpl<MealPlanMapper, MealPlan> i
                 .collect(Collectors.toList());
     }
 
+    /** 新增膳食计划，清除缓存 */
     @Override
     public boolean saveMealPlan(MealPlan mealPlan) {
         validateMealPlan(mealPlan);
@@ -62,6 +69,7 @@ public class MealPlanServiceImpl extends ServiceImpl<MealPlanMapper, MealPlan> i
         return saved;
     }
 
+    /** 更新膳食计划，清除缓存 */
     @Override
     public boolean updateMealPlan(MealPlan mealPlan) {
         if (mealPlan.getId() == null) {
@@ -78,6 +86,7 @@ public class MealPlanServiceImpl extends ServiceImpl<MealPlanMapper, MealPlan> i
         return updated;
     }
 
+    /** 删除膳食计划，清除缓存 */
     @Override
     public boolean removeMealPlan(Long id) {
         if (id == null) {

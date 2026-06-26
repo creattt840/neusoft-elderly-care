@@ -323,6 +323,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 
 import { elderlyApi, careApi, bedApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 
 import {
 
@@ -764,14 +765,8 @@ const handleDelete = (row) => {
 
     type: 'warning'
 
-  }).then(async () => {
-
-    await elderlyApi.delete(row.id)
-
-    ElMessage.success('删除成功')
-
-    loadData()
-
+  }).then(() => {
+    runWithMessage(() => elderlyApi.delete(row.id), '删除成功', loadData)
   })
 
 }

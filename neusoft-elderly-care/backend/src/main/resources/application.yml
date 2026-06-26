@@ -21,6 +21,11 @@ spring:
       password: ${REDIS_PASSWORD:}
       database: 0
 
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1h
+
 auth:
   token-expire-hours: ${AUTH_TOKEN_EXPIRE_HOURS:24}
 

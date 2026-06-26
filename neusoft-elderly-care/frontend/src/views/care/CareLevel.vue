@@ -48,6 +48,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { careApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -99,10 +100,8 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确认删除？', '提示', { type: 'warning' }).then(async () => {
-    await careApi.deleteLevel(row.id)
-    ElMessage.success('删除成功')
-    loadData()
+  ElMessageBox.confirm('确认删除？', '提示', { type: 'warning' }).then(() => {
+    runWithMessage(() => careApi.deleteLevel(row.id), '删除成功', loadData)
   })
 }
 

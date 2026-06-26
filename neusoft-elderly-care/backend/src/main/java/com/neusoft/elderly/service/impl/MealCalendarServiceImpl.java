@@ -5,18 +5,40 @@ import com.neusoft.elderly.common.exception.BusinessException;
 import com.neusoft.elderly.entity.MealCalendar;
 import com.neusoft.elderly.mapper.MealCalendarMapper;
 import com.neusoft.elderly.service.MealCalendarService;
+import com.neusoft.elderly.service.RelatedRecordCleanupService;
 import com.neusoft.elderly.vo.MealCalendarVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.io.Serializable;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 膳食日历服务实现
+ */
 @Service
 public class MealCalendarServiceImpl extends ServiceImpl<MealCalendarMapper, MealCalendar> implements MealCalendarService {
 
+    private final RelatedRecordCleanupService relatedRecordCleanupService;
+
+    public MealCalendarServiceImpl(RelatedRecordCleanupService relatedRecordCleanupService) {
+        this.relatedRecordCleanupService = relatedRecordCleanupService;
+    }
+
+    /** 删除膳食日历（含老人配餐关联） */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(Serializable id) {
+        relatedRecordCleanupService.removeElderlyMealsByCalendarId(Long.valueOf(id.toString()));
+        return super.removeById(id);
+    }
+
+    /** 根据日期查询菜单 */
     @Override
     public List<MealCalendarVO> listByDate(LocalDate date) {
         return baseMapper.selectByDate(date).stream()
@@ -24,6 +46,7 @@ public class MealCalendarServiceImpl extends ServiceImpl<MealCalendarMapper, Mea
                 .collect(Collectors.toList());
     }
 
+    /** 根据日期范围查询菜单 */
     @Override
     public List<MealCalendarVO> listByDateRange(LocalDate startDate, LocalDate endDate) {
         return baseMapper.selectByDateRange(startDate, endDate).stream()
@@ -31,6 +54,7 @@ public class MealCalendarServiceImpl extends ServiceImpl<MealCalendarMapper, Mea
                 .collect(Collectors.toList());
     }
 
+    /** 新增膳食日历 */
     @Override
     public boolean saveMealCalendar(MealCalendar mealCalendar) {
         validateMealCalendar(mealCalendar);
@@ -40,6 +64,7 @@ public class MealCalendarServiceImpl extends ServiceImpl<MealCalendarMapper, Mea
         return save(mealCalendar);
     }
 
+    /** 更新膳食日历 */
     @Override
     public boolean updateMealCalendar(MealCalendar mealCalendar) {
         if (mealCalendar.getId() == null) {

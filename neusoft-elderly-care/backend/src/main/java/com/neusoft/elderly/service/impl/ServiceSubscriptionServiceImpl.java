@@ -19,6 +19,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 服务订阅服务实现
+ */
 @Service
 public class ServiceSubscriptionServiceImpl extends ServiceImpl<ServiceSubscriptionMapper, ServiceSubscription> implements ServiceSubscriptionService {
 
@@ -28,6 +31,7 @@ public class ServiceSubscriptionServiceImpl extends ServiceImpl<ServiceSubscript
     @Autowired
     private ServiceInfoService serviceInfoService;
 
+    /** 根据老人ID查询服务订阅列表 */
     @Override
     public List<ServiceSubscriptionVO> listSubscriptionVOs(Long elderlyId) {
         List<ServiceSubscription> subscriptions = baseMapper.selectByElderlyId(elderlyId);

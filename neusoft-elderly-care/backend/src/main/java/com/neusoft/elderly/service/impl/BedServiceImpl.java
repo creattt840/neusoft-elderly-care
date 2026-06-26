@@ -12,12 +12,16 @@ import com.neusoft.elderly.mapper.BedMapper;
 import com.neusoft.elderly.service.BedService;
 import com.neusoft.elderly.service.ElderlyService;
 import com.neusoft.elderly.service.PageCacheService;
+import com.neusoft.elderly.service.RelatedRecordCleanupService;
 import com.neusoft.elderly.service.RoomService;
 import com.neusoft.elderly.vo.BedVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.io.Serializable;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,6 +30,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 床位信息服务实现
+ */
 @Service
 public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedService {
 
@@ -41,11 +48,20 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
     @Autowired
     private PageCacheService pageCacheService;
 
+    @Autowired
+    private RelatedRecordCleanupService relatedRecordCleanupService;
+
+    /**
+     * 查询全部床位列表（含老人信息）
+     */
     @Override
     public List<BedVO> listBedVOs() {
         return buildSortedBedVOs(list());
     }
 
+    /**
+     * 分页查询床位列表（缓存）
+     */
     @Override
     @Cacheable(cacheNames = CacheNames.BED_PAGE,
             key = "T(com.neusoft.elderly.common.utils.CacheKeyUtils).pageKey(#page.current, #page.size)")
@@ -59,6 +75,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         return PageResult.of(total, list, page.getCurrent(), page.getSize());
     }
 
+    /** 新增床位，清除缓存 */
     @Override
     public boolean save(Bed entity) {
         boolean saved = super.save(entity);
@@ -68,6 +85,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         return saved;
     }
 
+    /** 更新床位，清除缓存 */
     @Override
     public boolean updateById(Bed entity) {
         boolean updated = super.updateById(entity);
@@ -77,8 +95,18 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         return updated;
     }
 
+    /** 删除床位，清除缓存 */
     @Override
-    public boolean removeById(java.io.Serializable id) {
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(Serializable id) {
+        Bed bed = getById(id);
+        if (bed == null) {
+            return false;
+        }
+        if ((bed.getStatus() != null && bed.getStatus() == 1) || bed.getElderlyId() != null) {
+            throw new BusinessException("该床位已被占用，无法删除");
+        }
+        relatedRecordCleanupService.removeCheckRecordsByBedId(bed.getId());
         boolean removed = super.removeById(id);
         if (removed) {
             pageCacheService.clearBedRelated();
@@ -86,6 +114,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         return removed;
     }
 
+    /** 根据房间ID查询床位 */
     @Override
     public List<BedVO> getBedVOsByRoomId(Long roomId) {
         return getBedsByRoomId(roomId).stream()
@@ -97,6 +126,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         return baseMapper.selectByRoomId(roomId);
     }
 
+    /** 查询可用床位 */
     @Override
     public List<BedVO> getAvailableBedVOs() {
         return baseMapper.selectAvailableBeds().stream()
@@ -105,6 +135,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
                 .collect(Collectors.toList());
     }
 
+    /** 根据ID查询床位详情 */
     @Override
     public BedVO getBedVO(Long id) {
         Bed bed = getById(id);
@@ -121,6 +152,7 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         return bedVO;
     }
 
+    /** 校验床位是否可分配 */
     @Override
     public void validateBedAssignable(Long bedId, Long elderlyId) {
         BedVO bed = getBedVO(bedId);
@@ -136,11 +168,13 @@ public class BedServiceImpl extends ServiceImpl<BedMapper, Bed> implements BedSe
         }
     }
 
+    /** 统计可用床位 */
     @Override
     public long countAvailableBeds() {
         return getAvailableBedVOs().size();
     }
 
+    /** 统计已占用床位 */
     @Override
     public long countOccupiedBeds() {
         return baseMapper.countOccupiedBedsExcludingMaintenance();

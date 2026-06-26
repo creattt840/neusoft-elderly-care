@@ -13,6 +13,7 @@
 | 后端 | Spring Boot 3.1、MyBatis-Plus、MySQL 8、Redis |
 | 前端 | Vue 3、Element Plus、Pinia、Axios、Vite |
 | 认证 | Redis Token + Spring MVC 拦截器（24 小时过期） |
+| 缓存 | Spring Cache + Redis（分页列表默认 TTL 1 小时） |
 
 ## 项目结构
 
@@ -22,7 +23,7 @@ nursing-management-system/
 └── neusoft-elderly-care/
     ├── backend/              # Spring Boot 后端
     │   └── src/main/java/com/neusoft/elderly/
-    │       ├── config/       # 配置（拦截器、MyBatis 等）
+    │       ├── config/       # 配置（拦截器、MyBatis、Redis 缓存等）
     │       ├── controller/   # REST 控制器
     │       ├── entity/       # 实体类
     │       ├── vo/           # 视图对象
@@ -111,6 +112,58 @@ npm run dev
 | `REDIS_PASSWORD` | （空） | Redis 密码 |
 | `AUTH_TOKEN_EXPIRE_HOURS` | 24 | Token 过期时间（小时） |
 
+后端 `application.yml` 还支持 Spring Cache 配置（默认 TTL 1 小时）：
+
+```yaml
+spring:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 1h
+```
+
+## 分页缓存说明
+
+9 个模块的分页/列表查询使用 **Spring Cache + Redis** 缓存，写操作后按业务域整区清除。
+
+| 模块 | 缓存区域 | 接口 |
+|------|----------|------|
+| 老人列表 | `elderly:page` | `GET /api/elderly/page` |
+| 房间管理 | `room:page` | `GET /api/room/page` |
+| 床位管理 | `bed:page` | `GET /api/bed/page` |
+| 外出登记 | `outing:page` | `GET /api/outing/page` |
+| 护理级别 | `care:level:list` | `GET /api/care/level/list` |
+| 护理内容 | `care:item:page` | `GET /api/care/item/page` |
+| 护理记录 | `care:record:page` | `GET /api/care-record/page` |
+| 膳食计划 | `meal:plan:page` | `GET /api/meal/plan/page` |
+| 服务关注 | `service:page` | `GET /api/service/page` |
+
+**核心组件：**
+
+| 组件 | 说明 |
+|------|------|
+| `RedisCacheConfig` | Redis CacheManager，Jackson 序列化，TTL 可配置 |
+| `CacheNames` / `CacheKeyUtils` | 缓存区域常量与 key 生成（含筛选参数） |
+| `PageCacheService` | 写操作后按业务域 `cache.clear()`，含跨模块级联 |
+
+**Redis key 格式：** `{cacheName}::{pageNum}:{pageSize}:{filters...}`，例如 `elderly:page::1:10:张三:1`
+
+## 删除与关联数据
+
+数据库存在外键约束，删除前需清理关联记录，否则后端返回 `code != 200`。前端 axios 拦截器会校验业务码并提示错误。
+
+| 模块 | 删除策略 |
+|------|----------|
+| 老人 | 级联删除入住/退住、外出、护理记录、膳食计划、服务订阅等关联数据 |
+| 房间 | 无在住床位时，先删床位及入住记录，再删房间；有在住床位则拒绝删除 |
+| 床位 | 未被占用时，先删入住/退住记录，再删床位 |
+| 护理级别 | 无关联老人时，级联删除护理项目及护理记录 |
+| 护理内容 | 先删护理记录，再删项目 |
+| 服务信息 | 先删服务订阅，再删服务 |
+| 膳食日历 | 先删老人配餐关联（`elderly_meal`），再删日历 |
+
+关联清理逻辑集中在 `RelatedRecordCleanupService`，各 Service 的 `removeById` 在事务中调用。
+
 ## 认证说明
 
 登录成功后，后端生成 UUID Token 并存入 Redis，前端在请求头携带：
@@ -127,7 +180,7 @@ Authorization: Bearer {token}
 
 ## API 概览
 
-所有接口前缀为 `/api`，统一返回 `{ code, message, data }` 结构，分页数据使用 `PageResult`（字段：`total`、`list`、`pageNum`、`pageSize`、`pages`）。
+所有接口前缀为 `/api`，统一返回 `{ code, message, data }` 结构。**仅 `code === 200` 表示成功**，分页数据使用 `PageResult`（字段：`total`、`list`、`pageNum`、`pageSize`、`pages`）。
 
 | 模块 | 路径前缀 |
 |------|----------|

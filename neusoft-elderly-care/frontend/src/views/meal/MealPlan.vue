@@ -86,6 +86,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { mealApi, elderlyApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -219,15 +220,15 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm(`确认删除 ${row.elderlyName} 的膳食计划？`, '提示', { type: 'warning' }).then(async () => {
-    const res = await mealApi.deletePlan(row.id)
-    if (res.code !== 200) {
-      ElMessage.error(res.message || '删除失败')
-      return
-    }
-    ElMessage.success('删除成功')
-    loadAssignedElderlyIds()
-    loadData()
+  ElMessageBox.confirm(`确认删除 ${row.elderlyName} 的膳食计划？`, '提示', { type: 'warning' }).then(() => {
+    runWithMessage(
+      () => mealApi.deletePlan(row.id),
+      '删除成功',
+      () => {
+        loadAssignedElderlyIds()
+        loadData()
+      }
+    )
   })
 }
 

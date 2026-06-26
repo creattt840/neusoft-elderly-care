@@ -94,6 +94,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import { bedApi, roomApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 
 const loading = ref(false)
 const tableData = ref([])
@@ -198,10 +199,8 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确认删除该床位？', '提示', { type: 'warning' }).then(async () => {
-    await bedApi.delete(row.id)
-    ElMessage.success('删除成功')
-    loadData()
+  ElMessageBox.confirm('确认删除该床位？', '提示', { type: 'warning' }).then(() => {
+    runWithMessage(() => bedApi.delete(row.id), '删除成功', loadData)
   })
 }
 

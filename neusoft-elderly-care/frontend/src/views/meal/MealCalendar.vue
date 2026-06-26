@@ -73,6 +73,7 @@
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { mealApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 import dayjs from 'dayjs'
 
 const currentDate = ref(new Date())
@@ -208,15 +209,15 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = () => {
-  ElMessageBox.confirm('确认删除该餐次菜单？', '提示', { type: 'warning' }).then(async () => {
-    const res = await mealApi.deleteCalendar(form.id)
-    if (res.code !== 200) {
-      ElMessage.error(res.message || '删除失败')
-      return
-    }
-    ElMessage.success('删除成功')
-    dialogVisible.value = false
-    loadData()
+  ElMessageBox.confirm('确认删除该餐次菜单？', '提示', { type: 'warning' }).then(() => {
+    runWithMessage(
+      () => mealApi.deleteCalendar(form.id),
+      '删除成功',
+      () => {
+        dialogVisible.value = false
+        loadData()
+      }
+    )
   })
 }
 

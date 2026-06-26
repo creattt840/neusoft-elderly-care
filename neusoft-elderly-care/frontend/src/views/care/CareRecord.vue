@@ -123,6 +123,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { careRecordApi, elderlyApi, careApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 import dayjs from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
@@ -286,10 +287,8 @@ const handleSubmit = async () => {
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确认删除？', '提示', { type: 'warning' }).then(async () => {
-    await careRecordApi.delete(row.id)
-    ElMessage.success('删除成功')
-    loadData()
+  ElMessageBox.confirm('确认删除？', '提示', { type: 'warning' }).then(() => {
+    runWithMessage(() => careRecordApi.delete(row.id), '删除成功', loadData)
   })
 }
 

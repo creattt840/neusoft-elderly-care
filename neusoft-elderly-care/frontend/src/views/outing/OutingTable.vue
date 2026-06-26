@@ -41,6 +41,7 @@
 <script setup>
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { outingApi } from '../../api/elderly'
+import { runWithMessage } from '../../utils/message'
 
 const props = defineProps({
   data: Array
@@ -57,10 +58,8 @@ const handleReturn = (row) => {
 }
 
 const handleDelete = (row) => {
-  ElMessageBox.confirm('确认删除该记录？', '提示', { type: 'warning' }).then(async () => {
-    await outingApi.delete(row.id)
-    ElMessage.success('删除成功')
-    emit('refresh')
+  ElMessageBox.confirm('确认删除该记录？', '提示', { type: 'warning' }).then(() => {
+    runWithMessage(() => outingApi.delete(row.id), '删除成功', () => emit('refresh'))
   })
 }
 </script>
