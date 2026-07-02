@@ -9,6 +9,13 @@ spring:
     username: ${MYSQL_USER:root}
     password: ${MYSQL_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
+  ai:
+    openai:
+      api-key: sk-6a8f112f697e4d15923aaa07f2b6e3f8
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
 
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
