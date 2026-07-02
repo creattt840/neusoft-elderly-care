@@ -14,9 +14,7 @@ neusoft-elderly-care/frontend/node_modules/
 Thumbs.db
 
 # Docs — only root README.md is tracked
-*.md
 !README.md
-doc/
 
 # Secrets
 .env
